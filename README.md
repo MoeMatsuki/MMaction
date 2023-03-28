@@ -55,10 +55,15 @@
 
         3. 実装するためのコマンド
         ```
-        python demo_spatiotmp_det.py --video mmaction2/demo/demo.mp4 --config mmaction2/configs/detection/ava/slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb.py --checkpoint checkpoints/slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb_20201217-16378594.pth --det-config mmaction2/demo/faster_rcnn_r50_fpn_2x_coco.py --det-checkpoint checkpoints/faster_rcnn_r50_fpn_2x_coco_bbox_mAP-0.384_20200504_210434-a5d8aa15.pth  --det-score-thr 0.9  --action-score-thr 0.5  --label-map mmaction2/tools/data/ava/label_map.txt  --predict-stepsize 8  --output-stepsize 4 --output-fps 6 --device cpu
+        python demo_spatiotmp_det.py --video mmaction2/demo/demo.mp4 --config mmaction2/configs/detection/ava/slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb.py --checkpoint checkpoints/slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb_20201217-16378594.pth --det-config mmaction2/demo/faster_rcnn_r50_fpn_2x_coco.py --det-checkpoint checkpoints/faster_rcnn_r50_fpn_2x_coco_bbox_mAP-0.384_20200504_210434-a5d8aa15.pth  --det-score-thr 0.9  --action-score-thr 0.5  --label-map mmaction2/tools/data/ava/label_map.txt  --predict-stepsize 8  --output-stepsize 4 --output-fps 6 --device cpu --out-filename sp_demo_output.mp4
         ```
         → 結果の動画が出力される
     
 ## GPUの場合
 
 1. 環境構築
+    env/README.mdの `CPU+docker` を確認する
+
+
+## memo
+ffmpeg -i KOKUYO_data/convert/IMG_1819/image_%05d.jpg -vcodec libx264 -pix_fmt yuv420p out.mp4

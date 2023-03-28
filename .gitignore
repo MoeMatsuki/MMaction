@@ -1,3 +1,11 @@
 __pycache__
-checkpoints/**
+checkpoints/
 tmp
+work_dirs*/
+*.mp4
+.DS_Store
+KOKUYO_data/
+.vscode
+env
+mmaction2/
+ava_data

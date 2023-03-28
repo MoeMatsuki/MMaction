@@ -240,6 +240,9 @@ def load_label_map(file_path):
     Returns:
         dict: The label map (int -> label name).
     """
+    # lines = open(file_path).readlines()
+    # # lines = [x.strip().split(': ') for x in lines]
+    # return {i+1: x for i, x in enumerate(lines)}
     lines = open(file_path).readlines()
     lines = [x.strip().split(': ') for x in lines]
     return {int(x[0]): x[1] for x in lines}
@@ -385,9 +388,13 @@ def main():
                 if i + 1 not in label_map:
                     continue
                 for j in range(proposal.shape[0]):
-                    if result[i][j, 4] > args.action_score_thr:
-                        prediction[j].append((label_map[i + 1], result[i][j,
-                                                                          4]))
+                    try:
+                        if result[i][j, 4] > args.action_score_thr:
+                            prediction[j].append((label_map[i + 1], result[i][j,
+                                                                                4]))
+                    except IndexError as e:
+                        print(e)
+                        continue
             predictions.append(prediction)
         prog_bar.update()
 
@@ -409,6 +416,7 @@ def main():
         for i in dense_timestamps(timestamps, dense_n)
     ]
     print('Performing visualization')
+    print(results)
     vis_frames = visualize(frames, results)
     vid = mpy.ImageSequenceClip([x[:, :, ::-1] for x in vis_frames],
                                 fps=args.output_fps)
