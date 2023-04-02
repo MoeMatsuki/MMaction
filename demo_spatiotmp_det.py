@@ -50,7 +50,6 @@ plate_green = [hex2color(h) for h in plate_green]
 
 def visualize(frames, annotations, plate=plate_blue, max_num=5):
     """Visualize frames with predicted annotations.
-
     Args:
         frames (list[np.ndarray]): Frames for visualization, note that
             len(frames) % len(annotations) should be 0.
@@ -58,7 +57,6 @@ def visualize(frames, annotations, plate=plate_blue, max_num=5):
         plate (str): The plate used for visualization. Default: plate_blue.
         max_num (int): Max number of labels to visualize for a person box.
             Default: 5.
-
     Returns:
         list[np.ndarray]: Visualized frames.
     """
@@ -67,6 +65,7 @@ def visualize(frames, annotations, plate=plate_blue, max_num=5):
     plate = [x[::-1] for x in plate]
     frames_ = cp.deepcopy(frames)
     nf, na = len(frames), len(annotations)
+    print(nf, na)
     assert nf % na == 0
     nfpa = len(frames) // len(annotations)
     anno = None
@@ -182,7 +181,6 @@ def parse_args():
 
 def frame_extraction(video_path):
     """Extract frames given video_path.
-
     Args:
         video_path (str): The video_path.
     """
@@ -208,11 +206,9 @@ def frame_extraction(video_path):
 
 def detection_inference(args, frame_paths):
     """Detect human boxes given frame paths.
-
     Args:
         args (argparse.Namespace): The arguments.
         frame_paths (list[str]): The paths of frames to do detection inference.
-
     Returns:
         list[np.ndarray]: The human detection results.
     """
@@ -233,10 +229,8 @@ def detection_inference(args, frame_paths):
 
 def load_label_map(file_path):
     """Load Label Map.
-
     Args:
         file_path (str): The file path of label map.
-
     Returns:
         dict: The label map (int -> label name).
     """
@@ -250,7 +244,6 @@ def load_label_map(file_path):
 
 def abbrev(name):
     """Get the abbreviation of label name:
-
     'take (an object) from (a person)' -> 'take ... from ...'
     """
     while name.find('(') != -1:
@@ -261,13 +254,11 @@ def abbrev(name):
 
 def pack_result(human_detection, result, img_h, img_w):
     """Short summary.
-
     Args:
         human_detection (np.ndarray): Human detection result.
         result (type): The predicted label of each human proposal.
         img_h (int): The image height.
         img_w (int): The image width.
-
     Returns:
         tuple: Tuple of human proposal, label name and label score.
     """

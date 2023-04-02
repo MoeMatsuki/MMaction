@@ -67,3 +67,7 @@
 
 ## memo
 ffmpeg -i KOKUYO_data/convert/IMG_1819/image_%05d.jpg -vcodec libx264 -pix_fmt yuv420p out.mp4
+
+python train.py work_dirs_kokuyo/ava/slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb.py --gpus 1 --validate
+
+python demo_spatiotmp_det.py --video Webmtg_221226_01.MOV --config slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb.py --checkpoint work_dirs_kokuyo/ava/slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb/latest.pth --det-config mmaction2/demo/faster_rcnn_r50_fpn_2x_coco.py --det-checkpoint checkpoints/faster_rcnn_r50_fpn_2x_coco_bbox_mAP-0.384_20200504_210434-a5d8aa15.pth  --det-score-thr 0.9  --action-score-thr 0.5  --label-map KOKUYO_data/annotations/classes_en.txt  --predict-stepsize 8  --output-stepsize 4 --output-fps 6 --out-filename sp_demo_output_train.mp4

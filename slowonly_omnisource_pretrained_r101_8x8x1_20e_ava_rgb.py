@@ -14,7 +14,7 @@ def load_label_map(file_path):
     lines = [x.strip().split(': ') for x in lines]
     return [int(x[0]) for x in lines]
 
-label_txt = "/home/moe/workspace/MMaction/KOKUYO_data/annotations/classes_en.txt"
+label_txt = "KOKUYO_data/annotations/classes_en.txt"
 all_labels = load_label_map(label_txt)
 custom_classes = all_labels#[3, 6, 10, 27, 29, 38, 41, 48, 51]
 num_classes = len(custom_classes) + 1
@@ -64,8 +64,8 @@ model = dict(
     test_cfg=dict(rcnn=dict(action_thr=0.002)))
 
 dataset_type = 'AVADataset'
-data_root = '/home/moe/workspace/MMaction/KOKUYO_data/convert'
-anno_root = '/home/moe/workspace/MMaction/KOKUYO_data/annotations'
+data_root = 'KOKUYO_data/convert'
+anno_root = 'KOKUYO_data/annotations'
 
 ann_file_train = f'{anno_root}/train7.csv'
 ann_file_val = f'{anno_root}/train7.csv'
