@@ -9,3 +9,4 @@ KOKUYO_data/
 env
 mmaction2/
 ava_data
+*.pkl
