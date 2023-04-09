@@ -4,39 +4,61 @@ import mmcv
 import numpy as np
 import torch
 import cv2
+from mmcv.runner import load_checkpoint
 
 from mmaction.models import build_detector
 
 class Recognizer:
-    def __init__(self, conf, preprocessing):
+    def __init__(self, conf):
         self.device = conf.device
         self.action_score_thr = conf.action_score_thr
-        self.config  = mmcv.Config.fromfile(conf.config)
-        self.timestamps = preprocessing.timestamps
-        self.clip_len = preprocessing.clip_len
-        self.frame_interval = preprocessing.frame_interval
-        self.frames = preprocessing.frames
-        self.frame_paths = preprocessing.frame_paths
-        self.img_norm_cfg = preprocessing.img_norm_cfg
-        self.new_h = preprocessing.new_h
-        self.new_w = preprocessing.new_w
-        self.label_map = preprocessing.get_label()
+        # self.config  = formater_config(conf.config)
+        self.config  = conf
 
         try:
             # In our spatiotemporal detection demo, different actions should have
             # the same number of bboxes.
-            self.config.model['test_cfg']['rcnn']['action_thr'] = .0
+            self.config['model']['test_cfg']['rcnn']['action_thr'] = .0
         except KeyError:
             pass
 
-    def __call__(self, human_detections):
+    def __call__(self, human_detections, timestamps, clip_len, frame_interval, frames, new_h, new_w):
         model = self.build_model()
-        return self.prediction(model, human_detections)
+        return self.prediction(model, human_detections, timestamps, clip_len, frame_interval, frames, new_h, new_w)
+
+    def load_label_map(self, file_path):
+        """Load Label Map.
+        Args:
+            file_path (str): The file path of label map.
+        Returns:
+            dict: The label map (int -> label name).
+        """
+        # lines = open(file_path).readlines()
+        # # lines = [x.strip().split(': ') for x in lines]
+        # return {i+1: x for i, x in enumerate(lines)}
+        lines = open(file_path).readlines()
+        lines = [x.strip().split(': ') for x in lines]
+        return {int(x[0]): x[1] for x in lines}
+
+    # Load label_map
+    def get_label(self):
+        label_map = self.load_label_map(self.config["label_map"])
+        try:
+            if self.config['data']['train']['custom_classes'] is not None:
+                label_map = {
+                    id + 1: label_map[cls]
+                    for id, cls in enumerate(self.config['data']['train']
+                                            ['custom_classes'])
+                }
+        except KeyError:
+            pass
+        return label_map
 
     def build_model(self):
-        self.config.model["backbone"]["pretrained"] = None
+        self.config.model.backbone.pretrained = None
         model = build_detector(self.config.model, test_cfg=self.config.get('test_cfg'))
 
+        load_checkpoint(model, self.config["checkpoint"], map_location='cpu')
         model.to(self.device)
         model.eval()
         return model
@@ -65,24 +87,38 @@ class Recognizer:
                                                                 for x in res]))
         return results
 
-    def prediction(self, model, human_detections):
+    def get_norm(self):
+        # Get img_norm_cfg
+        img_norm_cfg = self.config.img_norm_cfg
+        if 'to_rgb' not in img_norm_cfg and 'to_bgr' in img_norm_cfg:
+            to_bgr = img_norm_cfg.pop('to_bgr')
+            img_norm_cfg['to_rgb'] = to_bgr
+        img_norm_cfg['mean'] = np.array(img_norm_cfg['mean'])
+        img_norm_cfg['std'] = np.array(img_norm_cfg['std'])
+        return img_norm_cfg
+
+    def prediction(self, model, human_detections, timestamps, clip_len, frame_interval, frames, new_h, new_w):
+        img_norm_cfg = self.get_norm()
+
         predictions = []
 
+        label_map = self.get_label()
+
         print('Performing SpatioTemporal Action Detection for each clip')
-        print(len(self.timestamps), len(human_detections))
-        assert len(self.timestamps) == len(human_detections)
-        prog_bar = mmcv.ProgressBar(len(self.timestamps))
-        for timestamp, proposal in zip(self.timestamps, human_detections):
+        print(len(timestamps), len(human_detections))
+        assert len(timestamps) == len(human_detections)
+        prog_bar = mmcv.ProgressBar(len(timestamps))
+        for timestamp, proposal in zip(timestamps, human_detections):
             if proposal.shape[0] == 0:
                 predictions.append(None)
                 continue
 
-            start_frame = timestamp - (self.clip_len // 2 - 1) * self.frame_interval
-            window_size = self.clip_len * self.frame_interval
-            frame_inds = start_frame + np.arange(0, window_size, self.frame_interval)
+            start_frame = timestamp - (clip_len // 2 - 1) * frame_interval
+            window_size = clip_len * frame_interval
+            frame_inds = start_frame + np.arange(0, window_size, frame_interval)
             frame_inds = list(frame_inds - 1)
-            imgs = [self.frames[ind].astype(np.float32) for ind in frame_inds]
-            _ = [mmcv.imnormalize_(img, **self.img_norm_cfg) for img in imgs]
+            imgs = [frames[ind].astype(np.float32) for ind in frame_inds]
+            _ = [mmcv.imnormalize_(img, **img_norm_cfg) for img in imgs]
             # THWC -> CTHW -> 1CTHW
             input_array = np.stack(imgs).transpose((3, 0, 1, 2))[np.newaxis]
             input_tensor = torch.from_numpy(input_array).to(self.device)
@@ -91,21 +127,22 @@ class Recognizer:
                 result = model(
                     return_loss=False,
                     img=[input_tensor],
-                    img_metas=[[dict(img_shape=(self.new_h, self.new_w))]],
+                    img_metas=[[dict(img_shape=(new_h, new_w))]],
                     proposals=[[proposal]])
                 result = result[0]
+                print(result)
                 prediction = []
                 # N proposals
                 for i in range(proposal.shape[0]):
                     prediction.append([])
                 # Perform action score thr
                 for i in range(len(result)):
-                    if i + 1 not in self.label_map:
+                    if i + 1 not in label_map:
                         continue
                     for j in range(proposal.shape[0]):
                         try:
                             if result[i][j, 4] > self.action_score_thr:
-                                prediction[j].append((self.label_map[i + 1], result[i][j,
+                                prediction[j].append((label_map[i + 1], result[i][j,
                                                                                     4]))
                         except IndexError as e:
                             print(e)
@@ -115,5 +152,5 @@ class Recognizer:
 
         results = []
         for human_detection, prediction in zip(human_detections, predictions):
-            results.append(self.pack_result(human_detection, prediction, self.new_h, self.new_w))
+            results.append(self.pack_result(human_detection, prediction, new_h, new_w))
         return results

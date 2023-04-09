@@ -6,6 +6,7 @@ import os
 import os.path as osp
 import shutil
 import pandas as pd
+from mmcv import Config
 
 import cv2
 import mmcv
@@ -15,6 +16,9 @@ from mmcv import DictAction
 from mmcv.runner import load_checkpoint
 
 from mmaction.models import build_detector
+
+from detector import Detector
+from recognizer import Recognizer
 
 try:
     from mmdet.apis import inference_detector, init_detector
@@ -105,80 +109,14 @@ def visualize(frames, annotations, plate=plate_blue, max_num=5):
 
     return frames_
 
-
 def parse_args():
-    parser = argparse.ArgumentParser(description='MMAction2 demo')
-    parser.add_argument(
-        '--config',
-        default=('configs/detection/ava/'
-                 'slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb.py'),
-        help='spatio temporal detection config file path')
-    parser.add_argument(
-        '--checkpoint',
-        default=('https://download.openmmlab.com/mmaction/detection/ava/'
-                 'slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb/'
-                 'slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb'
-                 '_20201217-16378594.pth'),
-        help='spatio temporal detection checkpoint file/url')
-    parser.add_argument(
-        '--det-config',
-        default='demo/faster_rcnn_r50_fpn_2x_coco.py',
-        help='human detection config file path (from mmdet)')
-    parser.add_argument(
-        '--det-checkpoint',
-        default=('http://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/'
-                 'faster_rcnn_r50_fpn_2x_coco/'
-                 'faster_rcnn_r50_fpn_2x_coco_'
-                 'bbox_mAP-0.384_20200504_210434-a5d8aa15.pth'),
-        help='human detection checkpoint file/url')
-    parser.add_argument(
-        '--det-score-thr',
-        type=float,
-        default=0.9,
-        help='the threshold of human detection score')
-    parser.add_argument(
-        '--action-score-thr',
-        type=float,
-        default=0.5,
-        help='the threshold of human action score')
-    parser.add_argument('--video', help='video file/url')
-    parser.add_argument(
-        '--label-map',
-        default='tools/data/ava/label_map.txt',
-        help='label map file')
-    parser.add_argument(
-        '--device', type=str, default='cuda:0', help='CPU/CUDA device option')
-    parser.add_argument(
-        '--out-filename',
-        default='demo/stdet_demo.mp4',
-        help='output filename')
-    parser.add_argument(
-        '--predict-stepsize',
-        default=8,
-        type=int,
-        help='give out a prediction per n frames')
-    parser.add_argument(
-        '--output-stepsize',
-        default=4,
-        type=int,
-        help=('show one frame per n frames in the demo, we should have: '
-              'predict_stepsize % output_stepsize == 0'))
-    parser.add_argument(
-        '--output-fps',
-        default=6,
-        type=int,
-        help='the fps of demo video output')
-    parser.add_argument(
-        '--cfg-options',
-        nargs='+',
-        action=DictAction,
-        default={},
-        help='override some settings in the used config, the key-value pair '
-        'in xxx=yyy format will be merged into config file. For example, '
-        "'--cfg-options model.backbone.depth=18 model.backbone.with_cp=True'")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--conf_path', default='config/default.py')
+    parser.add_argument('--video', default='KOKUYO_data/Webmtg_221226_01.MOV')
+    parser.add_argument("--out_video", default="test_mmaction2.mp4")
+    parser.add_argument("--out_csv", default="test_mmaction2.csv")
     args = parser.parse_args()
     return args
-
 
 def frame_extraction(video_path):
     """Extract frames given video_path.
@@ -204,45 +142,6 @@ def frame_extraction(video_path):
         flag, frame = vid.read()
     return frame_paths, frames
 
-
-def detection_inference(args, frame_paths):
-    """Detect human boxes given frame paths.
-    Args:
-        args (argparse.Namespace): The arguments.
-        frame_paths (list[str]): The paths of frames to do detection inference.
-    Returns:
-        list[np.ndarray]: The human detection results.
-    """
-    model = init_detector(args.det_config, args.det_checkpoint, args.device)
-    assert model.CLASSES[0] == 'person', ('We require you to use a detector '
-                                          'trained on COCO')
-    results = []
-    print('Performing Human Detection for each frame')
-    prog_bar = mmcv.ProgressBar(len(frame_paths))
-    for frame_path in frame_paths:
-        result = inference_detector(model, frame_path)
-        # We only keep human detections with score larger than det_score_thr
-        result = result[0][result[0][:, 4] >= args.det_score_thr]
-        results.append(result)
-        prog_bar.update()
-    return results
-
-
-def load_label_map(file_path):
-    """Load Label Map.
-    Args:
-        file_path (str): The file path of label map.
-    Returns:
-        dict: The label map (int -> label name).
-    """
-    # lines = open(file_path).readlines()
-    # # lines = [x.strip().split(': ') for x in lines]
-    # return {i+1: x for i, x in enumerate(lines)}
-    lines = open(file_path).readlines()
-    lines = [x.strip().split(': ') for x in lines]
-    return {int(x[0]): x[1] for x in lines}
-
-
 def abbrev(name):
     """Get the abbreviation of label name:
     'take (an object) from (a person)' -> 'take ... from ...'
@@ -251,30 +150,6 @@ def abbrev(name):
         st, ed = name.find('('), name.find(')')
         name = name[:st] + '...' + name[ed + 1:]
     return name
-
-
-def pack_result(human_detection, result, img_h, img_w):
-    """Short summary.
-    Args:
-        human_detection (np.ndarray): Human detection result.
-        result (type): The predicted label of each human proposal.
-        img_h (int): The image height.
-        img_w (int): The image width.
-    Returns:
-        tuple: Tuple of human proposal, label name and label score.
-    """
-    human_detection[:, 0::2] /= img_w
-    human_detection[:, 1::2] /= img_h
-    results = []
-    if result is None:
-        return None
-    for prop, res in zip(human_detection, result):
-        res.sort(key=lambda x: -x[1])
-        results.append(
-            (prop.data.cpu().numpy(), [x[0] for x in res], [x[1]
-                                                            for x in res]))
-    return results
-
 
 def save_csv(frames_path, frames, annotations, labels, plate=plate_blue):
 
@@ -336,8 +211,8 @@ def main():
     w_ratio, h_ratio = new_w / w, new_h / h
 
     # Get clip_len, frame_interval and calculate center index of each clip
-    config = mmcv.Config.fromfile(args.config)
-    config.merge_from_dict(args.cfg_options)
+    config = mmcv.Config.fromfile(args.conf_path)
+    config.merge_from_dict(config["cfg_options"])
     val_pipeline = config.data.val.pipeline
 
     sampler = [x for x in val_pipeline if x['type'] == 'SampleAVAFrames'][0]
@@ -346,28 +221,11 @@ def main():
     assert clip_len % 2 == 0, 'We would like to have an even clip_len'
     # Note that it's 1 based here
     timestamps = np.arange(window_size // 2, num_frame + 1 - window_size // 2,
-                           args.predict_stepsize)
-
-    # Load label_map
-    label_map = load_label_map(args.label_map)
-    try:
-        if config['data']['train']['custom_classes'] is not None:
-            label_map = {
-                id + 1: label_map[cls]
-                for id, cls in enumerate(config['data']['train']
-                                         ['custom_classes'])
-            }
-    except KeyError:
-        pass
+                           config["predict_stepsize"])
 
     # Get Human detection results
-    center_frames = [frame_paths[ind - 1] for ind in timestamps]
-    human_detections = detection_inference(args, center_frames)
-    for i in range(len(human_detections)):
-        det = human_detections[i]
-        det[:, 0:4:2] *= w_ratio
-        det[:, 1:4:2] *= h_ratio
-        human_detections[i] = torch.from_numpy(det[:, :4]).to(args.device)
+    detector = Detector(config)
+    human_detections = detector(frame_paths, timestamps, w_ratio, h_ratio)
 
     # Get img_norm_cfg
     img_norm_cfg = config['img_norm_cfg']
@@ -385,63 +243,8 @@ def main():
     except KeyError:
         pass
 
-    config.model.backbone.pretrained = None
-    model = build_detector(config.model, test_cfg=config.get('test_cfg'))
-
-    load_checkpoint(model, args.checkpoint, map_location='cpu')
-    model.to(args.device)
-    model.eval()
-
-    predictions = []
-
-    print('Performing SpatioTemporal Action Detection for each clip')
-    assert len(timestamps) == len(human_detections)
-    prog_bar = mmcv.ProgressBar(len(timestamps))
-    for timestamp, proposal in zip(timestamps, human_detections):
-        if proposal.shape[0] == 0:
-            predictions.append(None)
-            continue
-
-        start_frame = timestamp - (clip_len // 2 - 1) * frame_interval
-        frame_inds = start_frame + np.arange(0, window_size, frame_interval)
-        frame_inds = list(frame_inds - 1)
-        imgs = [frames[ind].astype(np.float32) for ind in frame_inds]
-        _ = [mmcv.imnormalize_(img, **img_norm_cfg) for img in imgs]
-        # THWC -> CTHW -> 1CTHW
-        input_array = np.stack(imgs).transpose((3, 0, 1, 2))[np.newaxis]
-        input_tensor = torch.from_numpy(input_array).to(args.device)
-
-        with torch.no_grad():
-            result = model(
-                return_loss=False,
-                img=[input_tensor],
-                img_metas=[[dict(img_shape=(new_h, new_w))]],
-                proposals=[[proposal]])
-            result = result[0]
-            print(result)
-            prediction = []
-            # N proposals
-            for i in range(proposal.shape[0]):
-                prediction.append([])
-            # Perform action score thr
-            for i in range(len(result)):
-                if i + 1 not in label_map:
-                    continue
-                for j in range(proposal.shape[0]):
-                    try:
-                        if result[i][j, 4] > args.action_score_thr:
-                            prediction[j].append((label_map[i + 1], result[i][j,
-                                                                                4]))
-                    except IndexError as e:
-                        print(e)
-                        continue
-            predictions.append(prediction)
-        prog_bar.update()
-
-    results = []
-
-    for human_detection, prediction in zip(human_detections, predictions):
-        results.append(pack_result(human_detection, prediction, new_h, new_w))
+    recognizer = Recognizer(config)
+    results = recognizer(human_detections, timestamps, clip_len, frame_interval, frames, new_h, new_w)
 
     def dense_timestamps(timestamps, n):
         """Make it nx frames."""
@@ -451,7 +254,7 @@ def main():
             len(timestamps) * n) * old_frame_interval / n + start
         return new_frame_inds.astype(np.int64)
 
-    dense_n = int(args.predict_stepsize / args.output_stepsize)
+    dense_n = int(config["predict_stepsize"] / config["output_stepsize"])
     frames = [
         cv2.imread(frame_paths[i - 1])
         for i in dense_timestamps(timestamps, dense_n)
@@ -461,14 +264,14 @@ def main():
         for i in dense_timestamps(timestamps, dense_n)
     ]
     print('Performing visualization')
-    print(results)
     vis_frames = visualize(frames, results)
-    label_names = list(label_map.values())[5:]
-    df_result = save_csv(frame_paths, frames, results, label_names)
-    pd.DataFrame(df_result).to_csv("test2.csv")
+    label_names = recognizer.get_label()
+    labels = list(label_names.values())
+    df_result = save_csv(frame_paths, frames, results, labels)
+    pd.DataFrame(df_result).to_csv(args.out_csv)
     vid = mpy.ImageSequenceClip([x[:, :, ::-1] for x in vis_frames],
-                                fps=args.output_fps)
-    vid.write_videofile(args.out_filename)
+                                fps=config["output_fps"])
+    vid.write_videofile(args.out_video)
 
     tmp_frame_dir = osp.dirname(frame_paths[0])
     shutil.rmtree(tmp_frame_dir)

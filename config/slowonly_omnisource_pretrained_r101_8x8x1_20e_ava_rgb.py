@@ -16,7 +16,8 @@ def load_label_map(file_path):
 
 label_txt = "KOKUYO_data/annotations/classes_en.txt"
 all_labels = load_label_map(label_txt)
-custom_classes = all_labels#[3, 6, 10, 27, 29, 38, 41, 48, 51]
+custom_classes = all_labels
+[all_labels.remove(i) for i in [1,2,3,4,5]]
 num_classes = len(custom_classes) + 1
 
 # model setting
@@ -67,8 +68,8 @@ dataset_type = 'AVADataset'
 data_root = 'KOKUYO_data/convert'
 anno_root = 'KOKUYO_data/annotations'
 
-ann_file_train = f'{anno_root}/train7.csv'
-ann_file_val = f'{anno_root}/train7.csv'
+ann_file_train = f'{anno_root}/train.csv'
+ann_file_val = f'{anno_root}/train.csv'
 
 exclude_file_train = f'{anno_root}/exclude.txt'
 exclude_file_val = f'{anno_root}/exclude.txt'
@@ -175,13 +176,13 @@ log_config = dict(
     ])
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = ('./work_dirs_kokuyo/ava/'
+work_dir = ('./work_dirs_kokuyo2/ava/'
             'slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb')
 # load_from = ('./checkpoints/'
 #             'slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb_20201217-16378594.pth')
-load_from = None #('https://download.openmmlab.com/mmaction/recognition/slowonly/'
-             #'omni/' 
-             #'slowonly_r101_omni_8x8x1_kinetics400_rgb_20200926-b5dbb701.pth')
+load_from = ('https://download.openmmlab.com/mmaction/recognition/slowonly/'
+             'omni/' 
+             'slowonly_r101_omni_8x8x1_kinetics400_rgb_20200926-b5dbb701.pth')
 
 resume_from = None
 find_unused_parameters = False

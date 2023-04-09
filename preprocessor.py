@@ -9,8 +9,9 @@ from utils import DictDotNotation, formater_config
 
 class Preprocessor:
     def __init__(self, conf):
-        self.config  = formater_config(conf.config)
-        self.cfg_options = DictDotNotation(conf.cfg_options)
+        # self.config  = formater_config(conf.config)
+        # self.cfg_options = DictDotNotation(conf.cfg_options)
+        self.config  = conf
         self.predict_stepsize = conf.predict_stepsize
         self.label_map = conf.label_map
 
@@ -25,6 +26,7 @@ class Preprocessor:
         self.window_size = None
         self.new_w = None
         self.new_h = None
+        
     def __call__(self, video):
 
         self.frame_paths, original_frames = self.frame_extraction(video)
@@ -36,7 +38,6 @@ class Preprocessor:
         self.frames = [mmcv.imresize(img, (self.new_w, self.new_h)) for img in original_frames]
         self.w_ratio, self.h_ratio = self.new_w / w, self.new_h / h
         self.timestamps = self.get_clip(num_frame)
-        self.get_norm()
 
     def frame_extraction(self, video_path):
         """Extract frames given video_path.
@@ -74,12 +75,12 @@ class Preprocessor:
         # Get clip_len, frame_interval and calculate center index of each clip
         # config = mmcv.Config.fromfile(self.config)
         # self.config.merge_from_dict(self.cfg_options)
-        for k, v in self.cfg_options.items():
-            self.config[k] = v
-        val_pipeline = self.config.data["val"]["pipeline"]
+        # for k, v in self.cfg_options.items():
+        #     self.config[k] = v
+        # val_pipeline = self.config.data["val"]["pipeline"]
+        val_pipeline = self.config.data.val.pipeline
 
         sampler = [x for x in val_pipeline if x['type'] == 'SampleAVAFrames'][0]
-        print(sampler)
         clip_len, frame_interval = sampler['clip_len'], sampler['frame_interval']
         window_size = clip_len * frame_interval
         assert clip_len % 2 == 0, 'We would like to have an even clip_len'
@@ -109,26 +110,23 @@ class Preprocessor:
 
     def get_label(self):
         # Load label_map
+        # label_map = self.load_label_map(self.label_map)
+        # print(self.config)
+        # try:
+        #     if self.config.data['train']['custom_classes'] is not None:
+        #         label_map = {
+        #             id + 1: label_map[cls]
+        #             for id, cls in enumerate(self.config.data['train']
+        #                                     ['custom_classes'])
         label_map = self.load_label_map(self.label_map)
-        print(self.config)
         try:
-            if self.config.data['train']['custom_classes'] is not None:
+            if self.config['data']['train']['custom_classes'] is not None:
                 label_map = {
                     id + 1: label_map[cls]
-                    for id, cls in enumerate(self.config.data['train']
+                    for id, cls in enumerate(self.config['data']['train']
                                             ['custom_classes'])
                 }
         except KeyError:
             pass
 
         return label_map
-    
-    def get_norm(self):
-        # Get img_norm_cfg
-        img_norm_cfg = self.config.img_norm_cfg
-        if 'to_rgb' not in img_norm_cfg and 'to_bgr' in img_norm_cfg:
-            to_bgr = img_norm_cfg.pop('to_bgr')
-            img_norm_cfg['to_rgb'] = to_bgr
-        img_norm_cfg['mean'] = np.array(img_norm_cfg['mean'])
-        img_norm_cfg['std'] = np.array(img_norm_cfg['std'])
-        self.img_norm_cfg = img_norm_cfg

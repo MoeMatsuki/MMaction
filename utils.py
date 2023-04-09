@@ -1,5 +1,6 @@
 import yaml
 from importlib import import_module 
+import setup
 
 class DictDotNotation(dict): 
     def __init__(self, *args, **kwargs): 

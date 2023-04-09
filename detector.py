@@ -15,15 +15,14 @@ class Detector:
         self.det_checkpoint = conf.det_checkpoint
         self.det_score_thr = conf.det_score_thr
 
-    def __call__(self, preprocessor):
+    def __call__(self, frame_paths, timestamps, w_ratio, h_ratio):
         # Get Human detection results
-        center_frames = [preprocessor.frame_paths[ind - 1] for ind in preprocessor.timestamps]
-        print(len(center_frames))
+        center_frames = [frame_paths[ind - 1] for ind in timestamps]
         human_detections = self.detection_inference(center_frames)
         for i in range(len(human_detections)):
             det = human_detections[i]
-            det[:, 0:4:2] *= preprocessor.w_ratio
-            det[:, 1:4:2] *= preprocessor.h_ratio
+            det[:, 0:4:2] *= w_ratio
+            det[:, 1:4:2] *= h_ratio
             human_detections[i] = torch.from_numpy(det[:, :4]).to(self.device)
         return human_detections
 
