@@ -1,5 +1,4 @@
-import setup
-from utils import formater_config
+import train.setup as setup
 import mmcv
 import numpy as np
 import torch

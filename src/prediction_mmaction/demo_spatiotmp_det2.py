@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import setup
+import train.setup as setup
 import argparse
 import copy as cp
 import os
@@ -70,7 +70,6 @@ def visualize(frames, annotations, plate=plate_blue, max_num=5):
     plate = [x[::-1] for x in plate]
     frames_ = cp.deepcopy(frames)
     nf, na = len(frames), len(annotations)
-    print(nf, na)
     assert nf % na == 0
     nfpa = len(frames) // len(annotations)
     anno = None
@@ -165,7 +164,6 @@ def save_csv(frames_path, frames, annotations, labels, plate=plate_blue):
         plate = [x[::-1] for x in plate]
         frames_ = cp.deepcopy(frames)
         nf, na = len(frames), len(annotations)
-        print(nf, na)
         assert nf % na == 0
         nfpa = len(frames) // len(annotations)
         anno = None
@@ -200,6 +198,8 @@ def save_csv(frames_path, frames, annotations, labels, plate=plate_blue):
 
 def main():
     args = parse_args()
+
+    os.chdir('../../')
 
     frame_paths, original_frames = frame_extraction(args.video)
     num_frame = len(frame_paths)

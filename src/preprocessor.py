@@ -5,7 +5,7 @@ import mmcv
 import numpy as np
 from importlib import import_module 
 
-from utils import DictDotNotation, formater_config
+from utils import DictDotNotation
 
 class Preprocessor:
     def __init__(self, conf):
@@ -26,7 +26,7 @@ class Preprocessor:
         self.window_size = None
         self.new_w = None
         self.new_h = None
-        
+
     def __call__(self, video):
 
         self.frame_paths, original_frames = self.frame_extraction(video)

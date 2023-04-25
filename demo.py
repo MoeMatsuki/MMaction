@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import setup
+import train.setup as setup
 import argparse
 import os
 import os.path as osp

@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import setup
+import setup as setup
 import argparse
 import copy
 import os
@@ -182,7 +182,7 @@ def main():
 
     if len(cfg.module_hooks) > 0:
         register_module_hooks(model, cfg.module_hooks)
-
+    print(cfg.data.train)
     if cfg.omnisource:
         # If omnisource flag is set, cfg.data.train should be a list
         assert isinstance(cfg.data.train, list)

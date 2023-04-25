@@ -2,7 +2,7 @@ _base_ = "slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb.py" # spatio tem
 
 chdir = "{{ fileDirname }}/.."
 
-checkpoint = f"{chdir}/work_dirs_kokuyo2/ava/slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb/epoch_2.pth" #spatio temporal detection checkpoint file/url
+checkpoint = f"{chdir}/work_dirs_kokuyo2/ava/slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb/latest.pth" #spatio temporal detection checkpoint file/url
 det_config = f"{chdir}/mmaction2/demo/faster_rcnn_r50_fpn_2x_coco.py" #human detection config file path (from mmdet)
 det_checkpoint = f"{chdir}/checkpoints/faster_rcnn_r50_fpn_2x_coco_bbox_mAP-0.384_20200504_210434-a5d8aa15.pth" #"http://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_2x_coco/faster_rcnn_r50_fpn_2x_coco_bbox_mAP-0.384_20200504_210434-a5d8aa15.pth" #human detection checkpoint file/url'
 det_score_thr = 0.9 # the threshold of human detection score

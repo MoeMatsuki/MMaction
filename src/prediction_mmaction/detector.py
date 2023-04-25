@@ -36,7 +36,7 @@ class Detector:
         Returns:
             list[np.ndarray]: The human detection results.
         """
-        model = init_detector(self.det_config, self.det_checkpoint, self.device)
+        model= init_detector(self.det_config, self.det_checkpoint, self.device)
         assert model.CLASSES[0] == 'person', ('We require you to use a detector '
                                             'trained on COCO')
         results = []
