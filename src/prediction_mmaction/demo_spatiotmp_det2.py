@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import train.setup as setup
+import setup as setup
 import argparse
 import copy as cp
 import os
@@ -110,9 +110,9 @@ def visualize(frames, annotations, plate=plate_blue, max_num=5):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--conf_path', default='config/default.py')
+    parser.add_argument('conf_path')
     parser.add_argument('--video', default='KOKUYO_data/Webmtg_221226_01.MOV')
-    parser.add_argument("--out_video", default="test_mmaction2.mp4")
+    parser.add_argument("--out_video", default="test_slowonly.mp4")
     parser.add_argument("--out_csv", default="test_mmaction2.csv")
     args = parser.parse_args()
     return args
@@ -123,11 +123,13 @@ def frame_extraction(video_path):
         video_path (str): The video_path.
     """
     # Load the video, extract frames into ./tmp/video_name
-    target_dir = osp.join('./tmp', osp.basename(osp.splitext(video_path)[0]))
+    target_dir = osp.join('tmp', osp.basename(osp.splitext(video_path)[0]))
     os.makedirs(target_dir, exist_ok=True)
     # Should be able to handle videos up to several hours
     frame_tmpl = osp.join(target_dir, 'img_{:06d}.jpg')
     vid = cv2.VideoCapture(video_path)
+    print(vid.get(cv2.CAP_PROP_FPS))
+    print(vid.set(cv2.CAP_PROP_FPS, 10))
     frames = []
     frame_paths = []
     flag, frame = vid.read()
@@ -198,8 +200,6 @@ def save_csv(frames_path, frames, annotations, labels, plate=plate_blue):
 
 def main():
     args = parse_args()
-
-    os.chdir('../../')
 
     frame_paths, original_frames = frame_extraction(args.video)
     num_frame = len(frame_paths)

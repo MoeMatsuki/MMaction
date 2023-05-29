@@ -86,7 +86,6 @@ def visualize(frames, annotations, plate=plate_blue, max_num=5):
     anno = None
     h, w, _ = frames[0].shape
     scale_ratio = np.array([w, h, w, h])
-    print(scale_ratio)
     for i in range(na):
         anno = annotations[i]
         if anno is None:
@@ -139,7 +138,7 @@ def convert_result(out_df, labels):
             frame_res.append((bboxes, label, score_))
         else:
             result.append(frame_res)
-            frame_res = []
+            frame_res = [(bboxes, label, score_)]
         pre_f_name = f_name
     result.append(frame_res)
 

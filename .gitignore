@@ -1,6 +1,6 @@
 __pycache__
 checkpoints/
-tmp
+tmp*
 work_dirs*/
 *.mp4
 .DS_Store
@@ -10,3 +10,6 @@ env
 mmaction2/
 ava_data
 *.pkl
+todo.txt
+fastlabel1/
+download

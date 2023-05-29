@@ -65,16 +65,17 @@ model = dict(
     test_cfg=dict(rcnn=dict(action_thr=0.002)))
 
 dataset_type = 'AVADataset'
-data_root = 'KOKUYO_data/convert'
-anno_root = 'KOKUYO_data/annotations'
+data_root = ""
 
-ann_file_train = f'{anno_root}/train.csv'
-ann_file_val = f'{anno_root}/train.csv'
+ann_file_train = "" #f'{anno_root}/train.csv'
+ann_file_val = ""#f'{anno_root}/train.csv'
 
-exclude_file_train = f'{anno_root}/exclude.txt'
-exclude_file_val = f'{anno_root}/exclude.txt'
+exclude_file_train = None#f'{anno_root}/exclude.txt'
+exclude_file_val = None#f'{anno_root}/exclude.txt'
 
-label_file = f'{anno_root}/action_list.pbtxt'#
+label_file = ""#f'{anno_root}/action_list.pbtxt'#
+clip_len = 4 #8
+total_epochs = 20
 
 proposal_file_train = (f'ava_data/annotations/ava_dense_proposals_train.FAIR.'
                        'recall_93.9.pkl')
@@ -84,7 +85,7 @@ img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
 
 train_pipeline = [
-    dict(type='SampleAVAFrames', clip_len=1, frame_interval=1),#dict(type='SampleAVAFrames', clip_len=8, frame_interval=8),
+    dict(type='SampleAVAFrames', clip_len=clip_len, frame_interval=8),
     dict(type='RawFrameDecode'),
     dict(type='RandomRescale', scale_range=(256, 320)),
     dict(type='RandomCrop', size=256),
@@ -106,7 +107,7 @@ train_pipeline = [
 ]
 # The testing is w/o. any cropping / flipping
 val_pipeline = [
-    dict(type='SampleAVAFrames', clip_len=8, frame_interval=8, test_mode=True),
+    dict(type='SampleAVAFrames', clip_len=clip_len, frame_interval=8, test_mode=True),
     dict(type='RawFrameDecode'),
     dict(type='Resize', scale=(-1, 256)),
     dict(type='Normalize', **img_norm_cfg),
@@ -130,7 +131,7 @@ data = dict(
     train=dict(
         type=dataset_type,
         ann_file=ann_file_train,
-        exclude_file=None,#exclude_file_train,
+        exclude_file=exclude_file_train,
         pipeline=train_pipeline,
         label_file=label_file,
         proposal_file=proposal_file_train,
@@ -142,7 +143,7 @@ data = dict(
     val=dict(
         type=dataset_type,
         ann_file=ann_file_val,
-        exclude_file=None,#exclude_file_val,
+        exclude_file=exclude_file_val,
         pipeline=val_pipeline,
         label_file=label_file,
         proposal_file=proposal_file_val,
@@ -166,18 +167,16 @@ lr_config = dict(
     warmup_by_epoch=True,
     warmup_iters=5,
     warmup_ratio=0.1)
-total_epochs = 20
 checkpoint_config = dict(interval=1)
 workflow = [('train', 1)]
+
 evaluation = dict(interval=1, save_best='mAP@0.5IOU')
 log_config = dict(
-    interval=20, hooks=[
+    interval=1, hooks=[
         dict(type='TextLoggerHook'),
     ])
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = ('./work_dirs_kokuyo2/ava/'
-            'slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb')
 # load_from = ('./checkpoints/'
 #             'slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb_20201217-16378594.pth')
 load_from = ('https://download.openmmlab.com/mmaction/recognition/slowonly/'

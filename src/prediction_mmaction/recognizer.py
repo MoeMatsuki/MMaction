@@ -1,8 +1,9 @@
-import train.setup as setup
+import setup as setup
 import mmcv
 import numpy as np
 import torch
 import cv2
+import os
 from mmcv.runner import load_checkpoint
 
 from mmaction.models import build_detector
@@ -104,7 +105,6 @@ class Recognizer:
         label_map = self.get_label()
 
         print('Performing SpatioTemporal Action Detection for each clip')
-        print(len(timestamps), len(human_detections))
         assert len(timestamps) == len(human_detections)
         prog_bar = mmcv.ProgressBar(len(timestamps))
         for timestamp, proposal in zip(timestamps, human_detections):
@@ -121,7 +121,6 @@ class Recognizer:
             # THWC -> CTHW -> 1CTHW
             input_array = np.stack(imgs).transpose((3, 0, 1, 2))[np.newaxis]
             input_tensor = torch.from_numpy(input_array).to(self.device)
-
             with torch.no_grad():
                 result = model(
                     return_loss=False,
@@ -129,7 +128,6 @@ class Recognizer:
                     img_metas=[[dict(img_shape=(new_h, new_w))]],
                     proposals=[[proposal]])
                 result = result[0]
-                print(result)
                 prediction = []
                 # N proposals
                 for i in range(proposal.shape[0]):
@@ -144,7 +142,6 @@ class Recognizer:
                                 prediction[j].append((label_map[i + 1], result[i][j,
                                                                                     4]))
                         except IndexError as e:
-                            print(e)
                             continue
                 predictions.append(prediction)
             prog_bar.update()

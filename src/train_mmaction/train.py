@@ -20,11 +20,21 @@ from mmaction.datasets import build_dataset
 from mmaction.models import build_model
 from mmaction.utils import (collect_env, get_root_logger,
                             register_module_hooks, setup_multi_processes)
+from train_rf import TrainRF
 
+from analysis_log import (
+    load_json_logs,
+    plot_curve,
+    add_plot_parser,
+    add_time_parser
+)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a recognizer')
     parser.add_argument('config', help='train config file path')
+    subparsers = parser.add_subparsers(dest='task', help='task parser')
+    add_plot_parser(subparsers)
+    add_time_parser(subparsers)
     parser.add_argument('--work-dir', help='the dir to save logs and models')
     parser.add_argument(
         '--resume-from', help='the checkpoint file to resume from')
@@ -83,12 +93,7 @@ def parse_args():
     return args
 
 
-def main():
-    args = parse_args()
-
-    cfg = Config.fromfile(args.config)
-
-    cfg.merge_from_dict(args.cfg_options)
+def main(args, cfg):
 
     # set multi-process settings
     setup_multi_processes(cfg)
@@ -182,7 +187,6 @@ def main():
 
     if len(cfg.module_hooks) > 0:
         register_module_hooks(model, cfg.module_hooks)
-    print(cfg.data.train)
     if cfg.omnisource:
         # If omnisource flag is set, cfg.data.train should be a list
         assert isinstance(cfg.data.train, list)
@@ -218,6 +222,10 @@ def main():
         timestamp=timestamp,
         meta=meta)
 
-
 if __name__ == '__main__':
-    main()
+    args = parse_args()
+
+    cfg = Config.fromfile(args.config)
+    cfg.merge_from_dict(cfg.cfg_options)
+
+    main(args, cfg)

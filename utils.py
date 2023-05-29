@@ -1,6 +1,6 @@
 import yaml
 from importlib import import_module 
-import setup
+import setup as setup
 import pandas as pd
 
 class DictDotNotation(dict): 

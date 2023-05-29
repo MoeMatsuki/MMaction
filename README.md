@@ -1,4 +1,27 @@
+# 20230529
+conf_path="config/prediction_slowonly.py"
+python src/preprocessing/converter.py ${conf_path}
+python src/train_mmaction/train.py ${conf_path} --gpus 1 --validate
+
+
+video="download/KOKUYO_data/IMG_1817.MOV"
+base_name=`basename ${video} | sed 's/\.[^\.]*$//'`
+out_path="download/KOKUYO_data/result/${base_name}"
+
+mkdir ${out_path}
+mkdir tmp/${base_name}
+ffmpeg -i ${video} -r 10 tmp/${base_name}/img_%06d.jpg
+
+python src/prediction_mmaction/demo_spatiotmp_det3.py ${conf_path} --video ${video} --out ${out_path}
+
 # Prediction
+
+cd /home/moe/MMaction
+config="config/prediction_slowonly.py"
+video="KOKUYO_data/IMG_1817.MOV"
+out_path="workdir/slowonly/"
+python src/prediction_mmaction/demo_spatiotmp_det3.py ${config} --video ${video} --out ${out_path}
+
 
 ## CPUの場合
 
