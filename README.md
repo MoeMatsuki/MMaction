@@ -1,4 +1,6 @@
 # 20230529
+slowonlyの学習と推論をするデモ。[ここ](https://drive.google.com/drive/folders/1-E9wy4dasna7wYiLxlTGgyFAfehD82O8)からdownload.zipをダウンロードして展開したものをMMACTIONの下に置いてください。カレントディレクトリはMMACTIONで、以下のコマンドを順に実装してください。
+
 conf_path="config/prediction_slowonly.py"
 python src/preprocessing/converter.py ${conf_path}
 python src/train_mmaction/train.py ${conf_path} --gpus 1 --validate
