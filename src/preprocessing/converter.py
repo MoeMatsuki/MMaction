@@ -62,7 +62,9 @@ def convert_spatio_label(ff, files, video_id):
 
 if __name__ == '__main__':
     args = parse_args()
+    print(args.config)
     cfg = Config.fromfile(args.config)
+    print(cfg)
 
     IMG_DIR = cfg.TRAIN_IMG_DIR#'KOKUYO_data/train_data'
     TXT_DIR = cfg.TRAIN_TXT_DIR#'KOKUYO_data/train_data'

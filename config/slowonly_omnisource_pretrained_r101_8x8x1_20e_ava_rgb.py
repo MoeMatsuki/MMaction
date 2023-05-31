@@ -1,3 +1,5 @@
+cdir = "{{ fileDirname }}/.."
+
 def load_label_map(file_path):
     """Load Label Map.
 
@@ -12,13 +14,13 @@ def load_label_map(file_path):
     # return {i+1: x for i, x in enumerate(lines)}
     lines = open(file_path).readlines()
     lines = [x.strip().split(': ') for x in lines]
-    return [int(x[0]) for x in lines]
+    custom_classes = [int(x[0]) for x in lines]
+    [custom_classes.remove(i) for i in [1,2,3,4,5]]
+    num_classes = len(custom_classes) + 1
+    return num_classes
 
-label_txt = "KOKUYO_data/annotations/classes_en.txt"
-all_labels = load_label_map(label_txt)
-custom_classes = all_labels
-[all_labels.remove(i) for i in [1,2,3,4,5]]
-num_classes = len(custom_classes) + 1
+label_map = f"{cdir}/download/KOKUYO_data/annotations/classes_en.txt" # label map file
+num_classes = load_label_map(label_map)
 
 # model setting
 model = dict(
@@ -137,7 +139,7 @@ data = dict(
         proposal_file=proposal_file_train,
         person_det_score_thr=0.9,
         num_classes=num_classes,
-        custom_classes=custom_classes,
+        custom_classes=num_classes,
         filename_tmpl="img_{:05d}.jpg",
         data_prefix=data_root),
     val=dict(
@@ -149,7 +151,7 @@ data = dict(
         proposal_file=proposal_file_val,
         person_det_score_thr=0.9,
         num_classes=num_classes,
-        custom_classes=custom_classes,
+        custom_classes=num_classes,
         filename_tmpl="img_{:05d}.jpg",
         data_prefix=data_root))
 data['test'] = data['val']
