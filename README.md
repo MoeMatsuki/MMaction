@@ -1,4 +1,10 @@
+# 環境
+git clone https://github.com/MoeMatsuki/MMaction.git
+cd MMaction
+git clone https://github.com/open-mmlab/mmaction2.git
+
 # 20230529
+
 slowonlyの学習と推論をするデモ。[ここ](https://drive.google.com/drive/folders/1-E9wy4dasna7wYiLxlTGgyFAfehD82O8)からdownload.zipをダウンロードして展開したものをMMACTIONの下に置いてください。カレントディレクトリはMMACTIONで、以下のコマンドを順に実装してください。
 
 conf_path="config/prediction_slowonly.py"
@@ -15,14 +21,6 @@ mkdir tmp/${base_name}
 ffmpeg -i ${video} -r 10 tmp/${base_name}/img_%06d.jpg
 
 python src/prediction_mmaction/demo_spatiotmp_det3.py ${conf_path} --video ${video} --out ${out_path}
-
-# Prediction
-
-cd /home/moe/MMaction
-config="config/prediction_slowonly.py"
-video="KOKUYO_data/IMG_1817.MOV"
-out_path="workdir/slowonly/"
-python src/prediction_mmaction/demo_spatiotmp_det3.py ${config} --video ${video} --out ${out_path}
 
 
 ## CPUの場合

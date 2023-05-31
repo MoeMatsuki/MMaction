@@ -12,4 +12,3 @@ mkdir -p tmp/${base_name}
 ffmpeg -i ${video} -r 10 tmp/${base_name}/img_%06d.jpg
 
 python src/prediction_mmaction/demo_spatiotmp_det3.py ${conf_path} --video ${video} --out ${out_path}
-python src/predict_rf.py/predict_rf.py  ${conf_path} ${video} ${out_path} ${out_path}

@@ -12,7 +12,7 @@ device = "cuda:0" # CPU/CUDA device option
 predict_stepsize = 8 # give out a prediction per n frames
 output_stepsize = 4 # show one frame per n frames in the demo, we should have predict_stepsize % output_stepsize == 0
 output_fps = 6 # the fps of demo video output
-work_dir = ('work_dirs/slowonly/20230529_fastlabel')
+work_dir = ('work_dirs/slowonly/20230601_fastlabel')
 
  # override some settings in the used config, the key-value pair in xxx=yyy format will be merged into config file. For example, '--cfg-options model.backbone.depth=18 model.backbone.with_cp=True
 import os
