@@ -4,7 +4,7 @@
 import pandas as pd
 import mmcv
 import argparse
-from mmcv import Config
+from mmengine.config import Config
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a recognizer')

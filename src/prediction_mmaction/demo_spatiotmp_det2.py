@@ -6,7 +6,7 @@ import os
 import os.path as osp
 import shutil
 import pandas as pd
-from mmcv import Config
+from mmengine.config import Config
 
 import cv2
 import mmcv

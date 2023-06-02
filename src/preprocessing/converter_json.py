@@ -1,6 +1,14 @@
 import json
 import os
 import cv2
+import argparse
+from mmengine.config import Config
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Train a recognizer')
+    parser.add_argument('config', help='train config file path')
+    args = parser.parse_args()
+    return args
 
 def normalize(bbox, w, h):
     return [bbox[0] / w, bbox[1] / h, bbox[2] / w, bbox[3] / h]
@@ -40,6 +48,13 @@ def main():
     dir = "/home/moe/MMaction/fastlabel1/json/"
     out_dir = "/home/moe/MMaction/fastlabel1/annotation/"
     trainimg_dir = "/home/moe/MMaction/fastlabel1/train_img/"
+    args = parse_args()
+    cfg = Config.fromfile(args.config)
+
+    # trainimg_dir = cfg.TRAIN_IMG_DIR#'KOKUYO_data/train_data'
+    # dir = cfg.TRAIN_TXT_DIR#'KOKUYO_data/train_data'
+    # out_dir = cfg.data_root#'KOKUYO_data/convert_img'
+
     for label in os.listdir(dir):
         label_dir = os.path.join(dir, label)
         out_label = os.path.join(out_dir, label)

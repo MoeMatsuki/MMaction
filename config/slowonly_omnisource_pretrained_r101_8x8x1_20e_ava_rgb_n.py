@@ -1,4 +1,7 @@
+_base_ = '/home/moe/MMaction/config/__base__/default_runtime.py'
+
 cdir = "{{ fileDirname }}/.."
+
 
 url = ('https://download.openmmlab.com/mmaction/recognition/slowonly/'
        'omni/slowonly_r101_without_omni_8x8x1_kinetics400_rgb_'
@@ -29,11 +32,9 @@ num_classes = load_label_map(label_map)
 # model setting
 model = dict(
     type='FastRCNN',
-    _scope_='mmdet',
-    init_cfg=dict(type='Pretrained', checkpoint=url),
     backbone=dict(
-        type='mmaction.ResNet3dSlowOnly',
-        depth=50,
+        type='ResNet3dSlowOnly',
+        depth=101,
         pretrained=None,
         pretrained2d=False,
         lateral=False,
@@ -52,14 +53,9 @@ model = dict(
         bbox_head=dict(
             type='BBoxHeadAVA',
             in_channels=2048,
-            num_classes=81,
+            num_classes=num_classes,
             multilabel=True,
             dropout_ratio=0.5)),
-    data_preprocessor=dict(
-        type='mmaction.ActionDataPreprocessor',
-        mean=[123.675, 116.28, 103.53],
-        std=[58.395, 57.12, 57.375],
-        format_shape='NCTHW'),
     train_cfg=dict(
         rcnn=dict(
             assigner=dict(
@@ -73,8 +69,9 @@ model = dict(
                 pos_fraction=1,
                 neg_pos_ub=-1,
                 add_gt_as_proposals=True),
-            pos_weight=1.0)),
-    test_cfg=dict(rcnn=None))
+            pos_weight=1.0,
+            debug=False)),
+    test_cfg=dict(rcnn=dict(action_thr=0.002)))
 
 dataset_type = 'AVADataset'
 data_root = ""
@@ -93,94 +90,107 @@ proposal_file_train = (f'ava_data/annotations/ava_dense_proposals_train.FAIR.'
                        'recall_93.9.pkl')
 proposal_file_val = f'ava_data/annotations/ava_dense_proposals_val.FAIR.recall_93.9.pkl'
 
-file_client_args = dict(io_backend='disk')
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
+
 train_pipeline = [
-    dict(type='SampleAVAFrames', clip_len=4, frame_interval=16),
-    dict(type='RawFrameDecode', **file_client_args),
+    dict(type='SampleAVAFrames', clip_len=clip_len, frame_interval=8),
+    dict(type='RawFrameDecode'),
     dict(type='RandomRescale', scale_range=(256, 320)),
     dict(type='RandomCrop', size=256),
     dict(type='Flip', flip_ratio=0.5),
+    dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCTHW', collapse=True),
-    dict(type='PackActionInputs')
+    # Rename is needed to use mmdet detectors
+    dict(type='Rename', mapping=dict(imgs='img')),
+    dict(type='ToTensor', keys=['img', 'proposals', 'gt_bboxes', 'gt_labels']),
+    dict(
+        type='ToDataContainer',
+        fields=[
+            dict(key=['proposals', 'gt_bboxes', 'gt_labels'], stack=False)
+        ]),
+    dict(
+        type='Collect',
+        keys=['img', 'proposals', 'gt_bboxes', 'gt_labels'],
+        meta_keys=['scores', 'entity_ids'])
 ]
 # The testing is w/o. any cropping / flipping
 val_pipeline = [
-    dict(
-        type='SampleAVAFrames', clip_len=4, frame_interval=16, test_mode=True),
-    dict(type='RawFrameDecode', **file_client_args),
+    dict(type='SampleAVAFrames', clip_len=clip_len, frame_interval=8, test_mode=True),
+    dict(type='RawFrameDecode'),
     dict(type='Resize', scale=(-1, 256)),
+    dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCTHW', collapse=True),
-    dict(type='PackActionInputs')
+    # Rename is needed to use mmdet detectors
+    dict(type='Rename', mapping=dict(imgs='img')),
+    dict(type='ToTensor', keys=['img', 'proposals']),
+    dict(type='ToDataContainer', fields=[dict(key='proposals', stack=False)]),
+    dict(
+        type='Collect',
+        keys=['img', 'proposals'],
+        meta_keys=['scores', 'img_shape'],
+        nested=True)
 ]
-
-train_dataloader = dict(
-    batch_size=16,
-    num_workers=8,
-    persistent_workers=True,
-    sampler=dict(type='DefaultSampler', shuffle=True),
-    dataset=dict(
+data = dict(
+    videos_per_gpu=6,
+    workers_per_gpu=2,
+    # During testing, each video may have different shape
+    val_dataloader=dict(videos_per_gpu=1),
+    test_dataloader=dict(videos_per_gpu=1),
+    train=dict(
         type=dataset_type,
         ann_file=ann_file_train,
         exclude_file=exclude_file_train,
         pipeline=train_pipeline,
         label_file=label_file,
         proposal_file=proposal_file_train,
-        data_prefix=dict(img=data_root)))
-val_dataloader = dict(
-    batch_size=1,
-    num_workers=8,
-    persistent_workers=True,
-    sampler=dict(type='DefaultSampler', shuffle=False),
-    dataset=dict(
+        person_det_score_thr=0.9,
+        num_classes=num_classes,
+        custom_classes=num_classes,
+        filename_tmpl="img_{:05d}.jpg",
+        data_prefix=data_root),
+    val=dict(
         type=dataset_type,
         ann_file=ann_file_val,
         exclude_file=exclude_file_val,
         pipeline=val_pipeline,
         label_file=label_file,
         proposal_file=proposal_file_val,
-        data_prefix=dict(img=data_root),
-        test_mode=True))
-test_dataloader = val_dataloader
+        person_det_score_thr=0.9,
+        num_classes=num_classes,
+        custom_classes=num_classes,
+        filename_tmpl="img_{:05d}.jpg",
+        data_prefix=data_root))
+data['test'] = data['val']
 
-val_evaluator = dict(
-    type='AVAMetric',
-    ann_file=ann_file_val,
-    label_file=label_file,
-    exclude_file=exclude_file_val)
-test_evaluator = val_evaluator
-train_cfg = dict(
-    type='EpochBasedTrainLoop', max_epochs=20, val_begin=1, val_interval=1)
-val_cfg = dict(type='ValLoop')
-test_cfg = dict(type='TestLoop')
+optimizer = dict(type='SGD', lr=0.075, momentum=0.9, weight_decay=0.00001)
+# this lr is used for 8 gpus
 
-param_scheduler = [
-    dict(type='LinearLR', start_factor=0.1, by_epoch=True, begin=0, end=5),
-    dict(
-        type='MultiStepLR',
-        begin=0,
-        end=20,
-        by_epoch=True,
-        milestones=[10, 15],
-        gamma=0.1)
-]
+optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
+# learning policy
 
-optim_wrapper = dict(
-    optimizer=dict(type='SGD', lr=0.2, momentum=0.9, weight_decay=0.00001),
-    clip_grad=dict(max_norm=40, norm_type=2))
+lr_config = dict(
+    policy='step',
+    step=[10, 15],
+    warmup='linear',
+    warmup_by_epoch=True,
+    warmup_iters=5,
+    warmup_ratio=0.1)
+checkpoint_config = dict(interval=1)
+workflow = [('train', 1)]
 
-# Default setting for scaling LR automatically
-#   - `enable` means enable scaling LR automatically
-#       or not by default.
-#   - `base_batch_size` = (8 GPUs) x (16 samples per GPU).
-auto_scale_lr = dict(enable=False, base_batch_size=128)
+evaluation = dict(interval=1, save_best='mAP@0.5IOU')
+log_config = dict(
+    interval=1, hooks=[
+        dict(type='TextLoggerHook'),
+    ])
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+# load_from = ('./checkpoints/'
+#             'slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb_20201217-16378594.pth')
+load_from = ('https://download.openmmlab.com/mmaction/recognition/slowonly/'
+             'omni/' 
+             'slowonly_r101_omni_8x8x1_kinetics400_rgb_20200926-b5dbb701.pth')
 
-# dist_params = dict(backend='nccl')
-# log_level = 'INFO'
-# # load_from = ('./checkpoints/'
-# #             'slowonly_omnisource_pretrained_r101_8x8x1_20e_ava_rgb_20201217-16378594.pth')
-# load_from = ('https://download.openmmlab.com/mmaction/recognition/slowonly/'
-#              'omni/' 
-#              'slowonly_r101_omni_8x8x1_kinetics400_rgb_20200926-b5dbb701.pth')
-
-# resume_from = None
-# find_unused_parameters = False
+resume_from = None
+find_unused_parameters = False

@@ -8,6 +8,7 @@ KOKUYO_data/
 .vscode
 env
 mmaction2/
+mmaction2_old/
 ava_data
 *.pkl
 todo.txt

@@ -10,11 +10,11 @@ import warnings
 import mmcv
 import torch
 import torch.distributed as dist
-from mmcv import Config, DictAction
-from mmcv.runner import get_dist_info, init_dist, set_random_seed
-from mmcv.utils import get_git_hash
+from mmengine.config import Config, DictAction
+from mmengine.runner import set_random_seed #get_dist_info, init_dist, set_random_seed
+# from mmcv.utils import get_git_hash
 
-from mmaction import __version__
+# from mmaction import __version__
 from mmaction.apis import init_random_seed, train_model
 from mmaction.datasets import build_dataset
 from mmaction.models import build_model
@@ -134,9 +134,9 @@ def main(args, cfg):
         distributed = False
     else:
         distributed = True
-        init_dist(args.launcher, **cfg.dist_params)
-        _, world_size = get_dist_info()
-        cfg.gpu_ids = range(world_size)
+        # init_dist(args.launcher, **cfg.dist_params)
+        # _, world_size = get_dist_info()
+        # cfg.gpu_ids = range(world_size)
 
     # The flag is used to determine whether it is omnisource training
     cfg.setdefault('omnisource', False)
@@ -204,12 +204,12 @@ def main(args, cfg):
                           'https://github.com/open-mmlab/mmaction2/pull/123')
         val_dataset = copy.deepcopy(cfg.data.val)
         datasets.append(build_dataset(val_dataset))
-    if cfg.checkpoint_config is not None:
-        # save mmaction version, config file content and class names in
-        # checkpoints as meta data
-        cfg.checkpoint_config.meta = dict(
-            mmaction_version=__version__ + get_git_hash(digits=7),
-            config=cfg.pretty_text)
+    # if cfg.checkpoint_config is not None:
+    #     # save mmaction version, config file content and class names in
+    #     # checkpoints as meta data
+    #     cfg.checkpoint_config.meta = dict(
+    #         mmaction_version=__version__ + get_git_hash(digits=7),
+    #         config=cfg.pretty_text)
 
     test_option = dict(test_last=args.test_last, test_best=args.test_best)
     train_model(

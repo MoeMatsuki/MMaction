@@ -7,7 +7,7 @@ import os
 import numpy as np
 import cv2
 import glob
-from mmcv import Config
+from mmengine.config import Config
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a recognizer')
@@ -62,9 +62,7 @@ def convert_spatio_label(ff, files, video_id):
 
 if __name__ == '__main__':
     args = parse_args()
-    print(args.config)
     cfg = Config.fromfile(args.config)
-    print(cfg)
 
     IMG_DIR = cfg.TRAIN_IMG_DIR#'KOKUYO_data/train_data'
     TXT_DIR = cfg.TRAIN_TXT_DIR#'KOKUYO_data/train_data'
