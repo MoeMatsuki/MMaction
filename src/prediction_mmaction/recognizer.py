@@ -4,9 +4,10 @@ import numpy as np
 import torch
 import cv2
 import os
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_checkpoint
+from mmaction.registry import MODELS
 
-from mmaction.models import build_detector
+# from mmaction.models import build_detector
 
 class Recognizer:
     def __init__(self, conf):
@@ -56,7 +57,8 @@ class Recognizer:
 
     def build_model(self):
         self.config.model.backbone.pretrained = None
-        model = build_detector(self.config.model, test_cfg=self.config.get('test_cfg'))
+        model = MODELS.build(self.config.model)
+        # model = build_detector(self.config.model, test_cfg=self.config.get('test_cfg'))
 
         load_checkpoint(model, self.config["checkpoint"], map_location='cpu')
         model.to(self.device)

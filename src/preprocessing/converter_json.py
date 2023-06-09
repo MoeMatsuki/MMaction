@@ -14,6 +14,8 @@ def normalize(bbox, w, h):
     return [bbox[0] / w, bbox[1] / h, bbox[2] / w, bbox[3] / h]
 
 def make_list(json_, w, h):
+    w = json_["width"]
+    h = json_["height"]
     annotations = json_["annotations"]
     result = []
     for human in annotations:
@@ -47,13 +49,12 @@ def save_txt(txt_list, file_path):
 def main():
     dir = "/home/moe/MMaction/fastlabel1/json/"
     out_dir = "/home/moe/MMaction/fastlabel1/annotation/"
-    trainimg_dir = "/home/moe/MMaction/fastlabel1/train_img/"
-    args = parse_args()
-    cfg = Config.fromfile(args.config)
+    # args = parse_args()
+    # cfg = Config.fromfile(args.config)
 
     # trainimg_dir = cfg.TRAIN_IMG_DIR#'KOKUYO_data/train_data'
-    # dir = cfg.TRAIN_TXT_DIR#'KOKUYO_data/train_data'
-    # out_dir = cfg.data_root#'KOKUYO_data/convert_img'
+    # dir = cfg.JSON_DIR#'KOKUYO_data/train_data'
+    # out_dir = cfg.TRAIN_TXT_DIR#'KOKUYO_data/convert_img'
 
     for label in os.listdir(dir):
         label_dir = os.path.join(dir, label)
@@ -62,7 +63,6 @@ def main():
             for img_name in os.listdir(label_dir):
                 img_dir = os.path.join(label_dir, img_name)
                 out_img = os.path.join(out_label, img_name)
-                train_img_dir = os.path.join(trainimg_dir, img_name)
                 os.makedirs(out_img, exist_ok=True)
                 if os.path.isdir(img_dir):
                     # 動画名とフレーム数
@@ -71,13 +71,6 @@ def main():
                         if ".json" in img_file:
                             path = os.path.join(img_dir, img_file)
                             out_file = os.path.join(out_img, img_file.replace(".json", ".txt"))
-                            img_path = os.path.join(train_img_dir, img_file.replace(".json", ".jpg"))
-                            img = cv2.imread(img_path)
-                            try:
-                                w,h,_ = img.shape[:3]
-                            except AttributeError as e:
-                                print(f"Error': {img_path} is not exist")
-                                assert e
 
                             # json読み取り
                             with open(path) as f:

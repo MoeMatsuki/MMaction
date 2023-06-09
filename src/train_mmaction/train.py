@@ -74,9 +74,9 @@ def merge_args(cfg, args):
     cfg.launcher = args.launcher
 
     # work_dir is determined in this priority: CLI > segment in file > filename
-    if args.work_dir is not None:
+    if cfg.work_dir is not None:
         # update configs according to CLI args if args.work_dir is not None
-        cfg.work_dir = args.work_dir
+        cfg.work_dir = cfg.work_dir
     elif cfg.get('work_dir', None) is None:
         # use config filename as default work_dir if cfg.work_dir is None
         cfg.work_dir = osp.join('./work_dirs',
@@ -110,8 +110,8 @@ def merge_args(cfg, args):
             diff_rank_seed=args.diff_rank_seed,
             deterministic=args.deterministic)
 
-    if args.cfg_options is not None:
-        cfg.merge_from_dict(args.cfg_options)
+    if cfg.cfg_options is not None:
+        cfg.merge_from_dict(cfg.cfg_options)
 
     return cfg
 

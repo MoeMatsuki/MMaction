@@ -1,19 +1,38 @@
 import pickle
-import mmcv
 import numpy as np
 import pandas as pd
-from common import get_label
+from common import load_label_map
+import argparse
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
-model_path = 'work_dirs_kokuyo2/clf_model.pkl'
-conf_path = "config/prediction_slowonly.py"
-config = mmcv.Config.fromfile(conf_path)
+def parse_args():
+    parser = argparse.ArgumentParser(description='Analyze Json Log')
+    # currently only support plot curve and calculate average train time
+    parser.add_argument('--conf_path', default=None)
+    parser.add_argument('--RFmodel', default=None)
+    args = parser.parse_args()
+    return args
+
+args = parse_args()
+if args.conf_path is None:
+    import conf
+    config = conf
+else:
+    from mmengine.config import Config
+    config = Config.fromfile(args.conf_path)
+
+if args.RFmodel is not None:
+    config.rf_model =  args.RFmodel
+model_path = config.rf_pickle_path
+
+
 
 import matplotlib.pyplot as plt
 
-
 with open(model_path, mode='rb') as f:  # with構文でファイルパスとバイナリ読み来みモードを設定
-        model = pickle.load(f)
-label_map = get_label(config)
+    model = pickle.load(f)
+label_map = load_label_map(config.label_map)
 labels = list(label_map.values())
 
 fti = model.feature_importances_

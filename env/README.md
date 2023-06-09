@@ -8,3 +8,5 @@ mim install "mmcv>=2.0.0"
 
 mim install mmcv==1.7.0
 mim install mmdet==2.27.0
+
+python setup.py develop

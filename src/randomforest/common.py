@@ -17,20 +17,20 @@ def load_label_map(file_path):
     return {int(x[0]): x[1] for x in lines}
 
 
-# Load label_map
-def get_label(config):
-    label_map = load_label_map(config["label_map"])
-    try:
-        if config['data']['train']['custom_classes'] is not None:
-            label_map = {
-                # id + 1: label_map[cls]
-                cls: label_map[cls]
-                for id, cls in enumerate(config['data']['train']
-                                        ['custom_classes'])
-            }
-    except KeyError:
-        pass
-    return label_map
+# # Load label_map
+# def get_label(config):
+#     label_map = load_label_map(config["label_map"])
+#     try:
+#         if config['data']['train']['custom_classes'] is not None:
+#             label_map = {
+#                 # id + 1: label_map[cls]
+#                 cls: label_map[cls]
+#                 for id, cls in enumerate(config['data']['train']
+#                                         ['custom_classes'])
+#             }
+#     except KeyError:
+#         pass
+#     return label_map
 
 def dense_timestamps(timestamps, n):
     """Make it nx frames."""
@@ -94,6 +94,7 @@ def visualize(frames, annotations, plate=plate_blue, max_num=5):
             ind = i * nfpa + j
             frame = frames_[ind]
             for ann in anno:
+                print(ann)
                 box = ann[0]
                 label = ann[1]
                 if not len(label):
@@ -101,6 +102,7 @@ def visualize(frames, annotations, plate=plate_blue, max_num=5):
                 score = ann[2]
                 # box = (box * scale_ratio).astype(np.int64)
                 st, ed = tuple(box[:2]), tuple(box[2:])
+                print(plate[0])
                 cv2.rectangle(frame, st, ed, plate[0], 2)
                 for k, lb in enumerate(label):
                     if k >= max_num:

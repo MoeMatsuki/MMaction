@@ -2,11 +2,6 @@ _base_ = '/home/moe/MMaction/config/__base__/default_runtime.py'
 
 cdir = "{{ fileDirname }}/.."
 
-
-url = ('https://download.openmmlab.com/mmaction/recognition/slowonly/'
-       'omni/slowonly_r101_without_omni_8x8x1_kinetics400_rgb_'
-       '20200926-0c730aef.pth')
-
 def load_label_map(file_path):
     """Load Label Map.
 

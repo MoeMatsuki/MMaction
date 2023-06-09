@@ -20,7 +20,7 @@ from mmaction.datasets import build_dataset
 from mmaction.models import build_model
 from mmaction.utils import (collect_env, get_root_logger,
                             register_module_hooks, setup_multi_processes)
-from train_rf import TrainRF
+from randomforest.train_rf import TrainRF
 
 from analysis_log import (
     load_json_logs,

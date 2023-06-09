@@ -1,8 +1,8 @@
+_base_ = '/home/moe/MMaction/config/__base__/default_runtime.py'
+
 cdir = "{{ fileDirname }}/.."
 
-url = ('https://download.openmmlab.com/mmaction/recognition/slowonly/'
-       'omni/slowonly_r101_without_omni_8x8x1_kinetics400_rgb_'
-       '20200926-0c730aef.pth')
+url = ('download/model/slowonly_kinetics400-pretrained-r101_8xb16-8x8x1-20e_ava21-rgb_20220906-43f16877.pth')
 
 def load_label_map(file_path):
     """Load Label Map.
@@ -19,12 +19,12 @@ def load_label_map(file_path):
     lines = open(file_path).readlines()
     lines = [x.strip().split(': ') for x in lines]
     custom_classes = [int(x[0]) for x in lines]
-    [custom_classes.remove(i) for i in [1,2,3,4,5]]
-    num_classes = len(custom_classes) + 1
-    return num_classes
+    # [custom_classes.remove(i) for i in [1,2,3,4,5]]
+    num_classes = len(custom_classes)  + 1
+    return num_classes, custom_classes
 
 label_map = f"{cdir}/download/KOKUYO_data/annotations/classes_en.txt" # label map file
-num_classes = load_label_map(label_map)
+num_classes, custom_classes = load_label_map(label_map)
 
 # model setting
 model = dict(
@@ -41,7 +41,14 @@ model = dict(
         conv1_kernel=(1, 7, 7),
         conv1_stride_t=1,
         pool1_stride_t=1,
-        spatial_strides=(1, 2, 2, 1)),
+        spatial_strides=(1, 2, 2, 1),
+        norm_cfg=dict(type='BN3d', requires_grad=True),
+        non_local=((0, 0, 0), (1, 0, 1, 0), (1, 0, 1, 0, 1, 0), (0, 0, 0)),
+        non_local_cfg=dict(
+            sub_sample=True,
+            use_scale=True,
+            norm_cfg=dict(type='BN3d', requires_grad=True),
+            mode='embedded_gaussian')),
     roi_head=dict(
         type='AVARoIHead',
         bbox_roi_extractor=dict(
@@ -52,7 +59,7 @@ model = dict(
         bbox_head=dict(
             type='BBoxHeadAVA',
             in_channels=2048,
-            num_classes=81,
+            num_classes=num_classes,
             multilabel=True,
             dropout_ratio=0.5)),
     data_preprocessor=dict(
@@ -114,7 +121,7 @@ val_pipeline = [
 ]
 
 train_dataloader = dict(
-    batch_size=16,
+    batch_size=8,
     num_workers=8,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
@@ -124,6 +131,8 @@ train_dataloader = dict(
         exclude_file=exclude_file_train,
         pipeline=train_pipeline,
         label_file=label_file,
+        num_classes=num_classes,
+        custom_classes=custom_classes,
         proposal_file=proposal_file_train,
         data_prefix=dict(img=data_root)))
 val_dataloader = dict(
@@ -137,6 +146,8 @@ val_dataloader = dict(
         exclude_file=exclude_file_val,
         pipeline=val_pipeline,
         label_file=label_file,
+        num_classes=num_classes,
+        custom_classes=custom_classes,
         proposal_file=proposal_file_val,
         data_prefix=dict(img=data_root),
         test_mode=True))
@@ -146,10 +157,12 @@ val_evaluator = dict(
     type='AVAMetric',
     ann_file=ann_file_val,
     label_file=label_file,
+    num_classes=num_classes,
+    custom_classes=custom_classes,
     exclude_file=exclude_file_val)
 test_evaluator = val_evaluator
 train_cfg = dict(
-    type='EpochBasedTrainLoop', max_epochs=20, val_begin=1, val_interval=1)
+    type='EpochBasedTrainLoop', max_epochs=total_epochs, val_begin=1, val_interval=1)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 

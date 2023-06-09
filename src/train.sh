@@ -6,5 +6,5 @@ conf_path="config/prediction_slowonly.py"
 python src/preprocessing/converter_json.py ${conf_path}
 python src/train_mmaction/train.py ${conf_path} --gpus 1 --validate
 
-python src/train_rf/convert_forRF.py ${conf_path} "clf_model_teambuild.pkl"
-python src/train_rf/train_rf.py ${conf_path}
+python src/train_mmaction/convert_forRF.py ${conf_path}
+python src/train_mmaction/train_rf.py ${conf_path} --RFmodel "clf_model_teambuild.pkl"
