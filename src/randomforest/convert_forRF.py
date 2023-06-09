@@ -70,10 +70,6 @@ class ConvertRF:
         train_df = self.processing(train_df)
         train_df.to_csv(output)
 
-        # val_df = pd.read_csv(self.val_csv, header=None)
-        # val_df = self.processing(val_df)
-        # val_df.to_csv(self.VAL_CSV)
-
     def has_duplicates(self, seq):
         return len(seq) != len(set(seq))
 
