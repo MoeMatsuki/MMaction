@@ -18,3 +18,5 @@ conf.pyをいじる
 
 # テストして結果を動画に出力
 > python src/randomforest/predict_rf.py 
+
+※conf.pyの下の方に定義しているファイルが処理されます。動画も出力されるので確認のときどうぞ。
