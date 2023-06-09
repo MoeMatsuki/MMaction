@@ -1,4 +1,6 @@
-# 学習用の設定ファイルはconf.pyを確認
+conf.pyをいじる
+
+# 学習
 > python src/randomforest/train_rf.py
 
 # ラベルの分布を分析

@@ -14,6 +14,7 @@ rf_model = "clf_model_WB.pkl"
 
 # 結果を保存するディレクトリ
 work_dir = 'work_dirs/slowonly/20230602_fastlabel'
+os.makedirs(work_dir, exist_ok=True)
 rf_pickle_path = os.path.join(work_dir, rf_model)
 
 # 多クラス分類をするか２値分類をするかどうか
