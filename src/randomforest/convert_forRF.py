@@ -130,7 +130,7 @@ class ConvertRF:
 
         # 一人分のサンプルとするためのユニークなidを定義
         df_gt = df_gt.set_axis(self.col_name, axis='columns')
-        convert_str = lambda x: str(x).zfill(5)
+        convert_str = lambda x: str(x).zfill(6)
         df_gt["id"] = df_gt["img_name"] + "_" + df_gt["frame_sec"].map(convert_str) + "_" + df_gt["person_id"].map(convert_str)
         group = df_gt.groupby("id")
 

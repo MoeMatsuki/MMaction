@@ -52,6 +52,35 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def split_patch(img):
+    h, w, _ = img.shape
+    patches = img.unfold(2, h/2, h/2*0.3).unfold(3, w/2, w/2*0.3)
+
+def scanning(img):
+    h, w = img.shape[:2]    # グレースケール画像のサイズ取得（カラーは3）
+    x = int(w/2)           # 領域の横幅
+    y = int(h/2)           # 領域の高さ
+    x_step = int(x*0.8)             # 領域の横方向へのずらし幅
+    y_step = int(y*0.8)            # 領域の縦方向へのずらし幅
+    x0 = 0                  # 領域の初期値x成分
+    y0 = 0                  # 領域の初期値y成分
+    j = 0                   # 縦方向のループ指標を初期化
+    imgs = []
+    # 縦方向の走査を行うループ
+    while y + (j * y_step) <= h:
+        i = 0                   # 横方向の走査が終わる度にiを初期化
+        ys = y0 + (j * y_step)  # 高さ方向の始点位置を更新
+        yf = y + (j * y_step)   # 高さ方向の終点位置を更新
+ 
+        # 横方向の走査をするループ
+        while x + (i * x_step) <= w:
+            roi = img[ys:yf, x0 + (i * x_step):x + (i * x_step)]    # 元画像から領域をroiで抽出
+            imgs.append(roi)
+ 
+            i = i + 1   # whileループの条件がFalse（横方向の端になる）まで、iを増分
+        j = j + 1       # whileループの条件がFalse（縦方向の端になる）まで、jを増分
+    return imgs
+
 def frame_extraction(video_path):
     """Extract frames given video_path.
     Args:
@@ -61,24 +90,8 @@ def frame_extraction(video_path):
     target_dir = osp.join('tmp', osp.basename(osp.splitext(video_path)[0]))
     frame_paths = glob.glob(os.path.join(target_dir, '*.jpg'))
     frame_paths = natsorted(frame_paths)
-    print(frame_paths)
     frames = [cv2.imread(i) for i in frame_paths]
-    # os.makedirs(target_dir, exist_ok=True)
-    # # Should be able to handle videos up to several hours
-    # frame_tmpl = osp.join(target_dir, 'img_{:06d}.jpg')
-    # print(f"target video is {video_path}")
-    # vid = cv2.VideoCapture(video_path)
-    # frames = []
-    # frame_paths = []
-    # flag, frame = vid.read()
-    # cnt = 0
-    # while flag:
-    #     frames.append(frame)
-    #     frame_path = frame_tmpl.format(cnt + 1)
-    #     frame_paths.append(frame_path)
-    #     cv2.imwrite(frame_path, frame)
-    #     cnt += 1
-    #     flag, frame = vid.read()
+
     return frame_paths, frames
 
 def save_csv(frames_path, frames, annotations, labels):
@@ -94,6 +107,7 @@ def save_csv(frames_path, frames, annotations, labels):
         [frame_result.update({l: []}) for l in labels]
         frames_ = cp.deepcopy(frames)
         nf, na = len(frames), len(annotations)
+        print(nf, na)
         assert nf % na == 0
         nfpa = len(frames) // len(annotations)
         anno = None
@@ -112,6 +126,7 @@ def save_csv(frames_path, frames, annotations, labels):
                         continue
                     score = ann[2]
                     box = (box * scale_ratio).astype(np.int64)
+                    print(ind)
                     frame_result["frame"].append(frames_path[ind])
                     frame_result["min_x"].append(box[0])
                     frame_result["min_y"].append(box[1])
@@ -261,12 +276,14 @@ def main():
     print('Performing SpatioTemporal Action Detection for each clip')
     assert len(timestamps) == len(human_detections)
     prog_bar = mmengine.ProgressBar(len(timestamps))
+    start_frame_list = []
     for timestamp, proposal in zip(timestamps, human_detections):
         if proposal.shape[0] == 0:
             predictions.append(None)
             continue
 
         start_frame = timestamp - (clip_len // 2 - 1) * frame_interval
+        start_frame_list.append(start_frame)
         frame_inds = start_frame + np.arange(0, window_size, frame_interval)
         frame_inds = list(frame_inds - 1)
         imgs = [frames[ind].astype(np.float32) for ind in frame_inds]
@@ -309,17 +326,24 @@ def main():
         return new_frame_inds.astype(np.int64)
 
     dense_n = int(config.predict_stepsize / config.output_stepsize)
-    frames = [
-        cv2.imread(frame_paths[i - 1])
-        for i in dense_timestamps(timestamps, dense_n)
-    ]
+    # frames = [
+    #     cv2.imread(frame_paths[i - 1])
+    #     for i in dense_timestamps(timestamps, dense_n)
+    # ]
     print('Performing visualization')
-    vis_frames = visualize(frames, results)
+    label_map = load_label_map(config["label_map"])
+    labels = list(label_map.values())
+    start_frames = [frame_paths[i] for i in start_frame_list]
+    print(start_frames)
+    start_frames_img = [cv2.imread(i) for i in start_frames]
+    df_result = save_csv(start_frames, start_frames_img, results, labels)
+    pd.DataFrame(df_result).to_csv(os.path.join(args.out,args.out_csv))
+
+    vis_frames = visualize(start_frames_img, results)
     vid = mpy.ImageSequenceClip([x[:, :, ::-1] for x in vis_frames],
                                 fps=config.output_fps)
-    vid.write_videofile(args.out_video)
+    vid.write_videofile(os.path.join(args.out, args.out_video))
 
-    # tmp_dir.cleanup()
 
 
 if __name__ == '__main__':

@@ -7,16 +7,16 @@ det_config = f"{cdir}/mmaction2/demo/demo_configs/faster-rcnn_r50_fpn_2x_coco_in
 det_checkpoint = f"{cdir}/download/model/faster_rcnn_r50_fpn_2x_coco_bbox_mAP-0.384_20200504_210434-a5d8aa15.pth" #"http://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_2x_coco/faster_rcnn_r50_fpn_2x_coco_bbox_mAP-0.384_20200504_210434-a5d8aa15.pth" #human detection checkpoint file/url'
 det_score_thr = 0.9 # the threshold of human detection score
 action_score_thr = 0.5 # the threshold of human action score
-label_map = f"{cdir}/download/KOKUYO_data/annotations/classes_en.txt" # label map file
+label_map = f"{cdir}/fastlabel1/annotations/classes_en.txt" # label map file
 device = "cuda:0" # CPU/CUDA device option
-predict_stepsize = 8 # give out a prediction per n frames
+predict_stepsize = 4 # give out a prediction per n frames
 output_stepsize = 4 # show one frame per n frames in the demo, we should have predict_stepsize % output_stepsize == 0
-output_fps = 6 # the fps of demo video output
-work_dir = ('work_dirs/slowonly/20230602_fastlabel')
+output_fps = predict_stepsize # the fps of demo video output
+work_dir = ('work_dirs/slowonly/20230619_fastlabel')
 
  # override some settings in the used config, the key-value pair in xxx=yyy format will be merged into config file. For example, '--cfg-options model.backbone.depth=18 model.backbone.with_cp=True
 import os
-JSON_DIR = 'fastlabel1/json'
+JSON_DIR = 'fastlabel1/jsons'
 TRAIN_IMG_DIR = 'fastlabel1/train_img'
 TRAIN_TXT_DIR = 'fastlabel1/annotation'
 data_root = "fastlabel1/convert_img"
@@ -39,7 +39,7 @@ rf_model = "clf_model_WB.pkl"
 rf_pickle_path = os.path.join(work_dir, rf_model)
 true_ids = [3,4]#[59, 64, 67, 104]
 exclude_sample_ids = []#[1, 123]
-multi_cls = False
+flag_multi_cls = False
 train_epoch = 1000
 result_rf_path = "result_rf.csv"
 

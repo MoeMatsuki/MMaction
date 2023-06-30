@@ -7,11 +7,10 @@ import os
 import numpy as np
 import cv2
 import glob
-from mmengine.config import Config
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a recognizer')
-    parser.add_argument('config', help='train config file path')
+    parser.add_argument('--config', default = None, help='train config file path')
     args = parser.parse_args()
     return args
 
@@ -69,7 +68,12 @@ def convert_spatio_label(files, video_id):
 
 if __name__ == '__main__':
     args = parse_args()
-    cfg = Config.fromfile(args.config)
+
+    if args.config is not None:
+        from mmengine.config import Config
+        cfg = Config.fromfile(args.config)
+    else:
+        import cfg
 
     IMG_DIR = cfg.TRAIN_IMG_DIR#'KOKUYO_data/train_data'
     TXT_DIR = cfg.TRAIN_TXT_DIR#'KOKUYO_data/train_data'
@@ -122,37 +126,3 @@ if __name__ == '__main__':
     with open(train_csv,"w") as f:
         f.write(result_train)
 
-    # with open(train_csv,"a") as f_train:
-    #     label_dirs = os.listdir(TXT_DIR)
-    #     print(f"Tere are {label_dirs} in the annotation directory.")
-    #     for label_dir in label_dirs:
-    #         label_dir_path = os.path.join(TXT_DIR, label_dir)
-    #         img_dirs = os.listdir(label_dir_path)
-    #         print(f"Tere are {img_dirs} in the {label_dir}.")
-    #         for img_dir in img_dirs:
-    #             # if img_dir in val_videos:
-    #             #     continue
-    #             img_dir_path = os.path.join(label_dir_path, img_dir)
-    #             frame_files = os.listdir(img_dir_path)
-    #             annotation_txt_files = glob.glob(os.path.join(img_dir_path, '*.txt'))
-    #             # 画像が存在するかどうかを確認
-    #             img_dir_path = os.path.join(IMG_DIR, os.path.join(label_dir, img_dir))
-    #             if not os.path.isdir(img_dir_path):
-    #                 img_dir_path = os.path.join(IMG_DIR, img_dir)
-    #             assert os.path.isdir(img_dir_path), f"{img_dir_path}が存在しないです。"
-    #             img_files = glob.glob(os.path.join(img_dir_path, '*.jpg'))
-    #             # 画像とアノテーションのファイル数が同じかどうか
-    #             img_len = len(img_files); anno_len = len(annotation_txt_files)
-    #             if img_len != anno_len:
-    #                 print(f"{img_dir_path}の画像とアノテーションのファイル数が一致しません。画像ファイル数：{img_len}、アノテーションファイル数：{anno_len}。")
-    #                 continue
-
-    #             # 画像のファイル名を変更
-    #             out_put = os.path.join(OUT_PATH, img_dir)
-    #             os.makedirs(out_put, exist_ok=True)
-    #             convert_img_filename(img_files, out_put)
-
-    #             # train.txtにファイル書き込み                
-    #             train_val = train_val + convert_spatio_label(f_train, annotation_txt_files, img_dir)
-
-    #             print(f"done {img_dir_path} processing: frame number is {anno_len}")

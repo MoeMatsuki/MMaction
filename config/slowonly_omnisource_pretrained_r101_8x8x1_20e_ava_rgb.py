@@ -102,7 +102,7 @@ proposal_file_val = f'ava_data/annotations/ava_dense_proposals_val.FAIR.recall_9
 
 file_client_args = dict(io_backend='disk')
 train_pipeline = [
-    dict(type='SampleAVAFrames', clip_len=4, frame_interval=16),
+    dict(type='SampleAVAFrames', clip_len=8, frame_interval=1),
     dict(type='RawFrameDecode', **file_client_args),
     dict(type='RandomRescale', scale_range=(256, 320)),
     dict(type='RandomCrop', size=256),
@@ -113,12 +113,26 @@ train_pipeline = [
 # The testing is w/o. any cropping / flipping
 val_pipeline = [
     dict(
-        type='SampleAVAFrames', clip_len=4, frame_interval=16, test_mode=True),
+        type='SampleAVAFrames', clip_len=8, frame_interval=1, test_mode=True),
+    # dict(type='mmdet.LoadImageFromFile', file_client_args=file_client_args),
     dict(type='RawFrameDecode', **file_client_args),
     dict(type='Resize', scale=(-1, 256)),
     dict(type='FormatShape', input_format='NCTHW', collapse=True),
-    dict(type='PackActionInputs')
+    dict(type='PackActionInputs'),
+    dict(
+        type='mmdet.PackDetInputs',
+        meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
+                   'scale_factor'))
 ]
+test_pipeline = val_pipeline
+# test_pipeline = [
+#     dict(type='mmdet.LoadImageFromFile', file_client_args=file_client_args),
+#     dict(type='mmdet.Resize', scale=(1333, 800), keep_ratio=True),
+#     dict(
+#         type='mmdet.PackDetInputs',
+#         meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
+#                    'scale_factor'))
+# ]
 
 train_dataloader = dict(
     batch_size=8,

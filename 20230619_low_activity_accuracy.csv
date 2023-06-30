@@ -1,0 +1,5 @@
+,precision,recall,f1-score
+result_slowonly,0.84671199,0.95406469,0.89428322
+result_slowfast,0.84780443,0.81719805,0.8259473
+result_slowonly_val,0.84222521,0.84119519,0.83953643
+result_slowfast_val,0.88780622,0.75676887,0.81437083
