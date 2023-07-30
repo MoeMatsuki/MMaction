@@ -133,7 +133,7 @@ def rendering_bboxes(img, boxes, labels, cols=plate_blue, f_scaring=True):
         img(np.array)
         box(np.array)
     """
-    img_ = copy.deepcopy(img)
+    img_ = cp.deepcopy(img)
     num = len(plate_blue)
     for ix, box in enumerate(boxes):
         if f_scaring:

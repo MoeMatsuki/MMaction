@@ -1,10 +1,9 @@
+import setup as setup
 import os
 import pickle
 import argparse
 import pandas as pd
 import numpy as np
-import csv
-import copy
 from common import load_label_map
 from scipy.spatial.distance import cdist
 from scipy.optimize import linear_sum_assignment
@@ -14,7 +13,7 @@ from sklearn.ensemble import RandomForestClassifier
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a recognizer')
     parser.add_argument('--config', default=None, help='train config file path')
-    parser.add_argument('--RFmodel', default="graph/rf_34_vs_125/clf_model_WB.pkl")
+    parser.add_argument('--RFmodel', default="/home/moe/MMaction/config/clf_model_WB.pkl")
     args = parser.parse_args()
     return args
 
@@ -56,9 +55,6 @@ class mm2Act:
     def __init__(self, config, rfmodel):
         if rfmodel is not None: # RFモデル
             self.rf_model =  rfmodel
-        
-        # csvファイル
-        self.mm_csv = config.mm_csv
 
         # 上位行動ラベル
         self.action_label_path = config.action_label
@@ -431,14 +427,31 @@ class mm2Act:
 
         return df
 
+def process_dirs(conf_rf, RFmodel, out_csv, dir):
+    predict_rf = mm2Act(conf_rf, RFmodel)
+    for curDir, _, files in os.walk(dir):
+        if "test_mmaction.csv" in files:
+            print(curDir)
+            csv_path = os.path.join(curDir, "test_mmaction.csv")
+            out_csv_path = os.path.join(curDir, out_csv)
+            predict_rf(csv_path, out_csv_path)
+
 if __name__ == '__main__':
     args = parse_args()
     if args.config is None:
-        import conf
-        config = conf
+        from config import conf_rf
+        config = conf_rf
     else:
         from mmengine.config import Config
         config = Config.fromfile(args.config)
 
+    ## Case1:     
+    mm_csv = "/home/moe/MMaction/data/20230703_サンプル/mm_result/Act01_230703_sample_2023-07-03.zip/test_mmaction.csv"
+    mm2RF_csv = "/home/moe/MMaction/data/20230703_サンプル/mm_result/Act01_230703_sample_2023-07-03.zip/rf_result.csv"
     converter = mm2Act(config, args.RFmodel)
-    converter(config.mm_csv, config.mm2RF_csv)
+    converter(mm_csv, mm2RF_csv)
+
+    ## Case2: 
+    out_csv = "rf_result.csv"
+    dir = "/home/moe/MMaction/data/20230703_サンプル/mm_result"
+    process_dirs(config, args.RFmodel, out_csv, dir)

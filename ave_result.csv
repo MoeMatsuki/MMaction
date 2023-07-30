@@ -1,15 +1,15 @@
 ,precision,recall,f1-score,support,pre_count
-standing,0.0,0.0,0.0,18.0,26.0
-sitting,0.9293055555555556,0.9333333333333332,0.9136838624338625,267.0,267.0
+standing,0.0,0.0,0.0,0.0,16.0
+sitting,0.8506944444444446,0.875,0.8434193121693125,96.0,101.0
 lying down,0.0,0.0,0.0,0.0,0.0
 squat,0.0,0.0,0.0,0.0,0.0
-body forward (including sideways),0.6655555555555556,0.6833333333333333,0.6336507936507937,183.0,240.0
-body backward,0.3283333333333333,0.2816666666666667,0.2916666666666667,102.0,51.0
-upper body leaning forward,0.6615277777777778,0.7474999999999999,0.6791666666666666,190.0,261.0
-upper body leaning backward,0.0,0.0,0.0,24.0,0.0
-upper body vertical,0.07583333333333334,0.059166666666666666,0.06333333333333332,70.0,20.0
-upper body stopped,0.8074999999999999,0.8774999999999998,0.8263095238095237,249.0,278.0
-upper body moving,0.04,0.026666666666666665,0.031111111111111107,34.0,8.0
+body forward (including sideways),0.44583333333333347,1.0,0.6140873015873014,48.0,110.0
+body backward,0.16666666666666666,0.08333333333333333,0.1111111111111111,48.0,4.0
+upper body leaning forward,0.4743055555555556,0.8541666666666666,0.5847222222222221,48.0,93.0
+upper body leaning backward,0.0,0.0,0.0,0.0,0.0
+upper body vertical,0.3125,0.22916666666666666,0.25,48.0,17.0
+upper body stopped,0.8416666666666668,0.9375,0.8787698412698415,96.0,108.0
+upper body moving,0.0,0.0,0.0,0.0,5.0
 hand above head,0.0,0.0,0.0,0.0,0.0
 hand rest chin in,0.0,0.0,0.0,0.0,0.0
 hand touch forehead,0.0,0.0,0.0,0.0,0.0
@@ -18,60 +18,60 @@ hand touch chin,0.0,0.0,0.0,0.0,0.0
 hand behind head,0.0,0.0,0.0,0.0,0.0
 hand behind hip,0.0,0.0,0.0,0.0,0.0
 hand under chest,0.0,0.0,0.0,0.0,0.0
-hand near computer,0.31999999999999995,0.30333333333333334,0.3088888888888889,212.0,62.0
-hand near whiteboard,0.0,0.0,0.0,7.0,1.0
-wrist stopped,0.12083333333333332,0.10416666666666667,0.10972222222222221,101.0,45.0
-wrist moving (mouse operation),0.125,0.0875,0.1,112.0,26.0
+hand near computer,0.0,0.0,0.0,61.0,1.0
+hand near whiteboard,0.0,0.0,0.0,0.0,1.0
+wrist stopped,0.1875,0.10416666666666667,0.13194444444444442,49.0,10.0
+wrist moving (mouse operation),0.0,0.0,0.0,24.0,0.0
 wrist moving (gesture),0.0,0.0,0.0,0.0,0.0
 wrist moving (eating/drinking),0.0,0.0,0.0,0.0,0.0
-wrist moving (writing on a whiteboard),0.0,0.0,0.0,5.0,0.0
+wrist moving (writing on a whiteboard),0.0,0.0,0.0,0.0,0.0
 wrist moving (writing on a desk),0.0,0.0,0.0,0.0,0.0
-wrist moving (other),0.0,0.0,0.0,35.0,2.0
+wrist moving (other),0.0,0.0,0.0,5.0,1.0
 wrist put sticky note on wallpaper,0.0,0.0,0.0,0.0,0.0
 wrist put sticky note on a desk,0.0,0.0,0.0,0.0,0.0
 wrist moving (erase on a whiteboard),0.0,0.0,0.0,0.0,0.0
-face front to body,0.9633333333333333,0.9333333333333332,0.9338888888888889,285.0,289.0
+face front to body,0.8583333333333335,1.0,0.9194444444444447,96.0,114.0
 face right to body,0.0,0.0,0.0,0.0,0.0
 face left to body,0.0,0.0,0.0,0.0,0.0
-face upward (looking up),0.0,0.0,0.0,0.0,1.0
-"face down (looking at PC, etc.)",0.9036111111111111,0.9463888888888888,0.9100661375661374,254.0,266.0
+face upward (looking up),0.0,0.0,0.0,0.0,0.0
+"face down (looking at PC, etc.)",0.8680555555555558,0.9375,0.8947751322751324,96.0,105.0
 face slanting (tilting head),0.0,0.0,0.0,0.0,0.0
-face stopped,0.9441666666666666,0.9833333333333332,0.9544444444444444,269.0,289.0
+face stopped,0.8583333333333335,1.0,0.9194444444444447,96.0,114.0
 face nod,0.0,0.0,0.0,0.0,0.0
 face sideways,0.0,0.0,0.0,0.0,0.0
-eyes looking (PC),0.6583333333333334,0.5111111111111111,0.5448412698412698,216.0,156.0
-eyes looking (smartphone),0.0,0.0,0.0,14.0,0.0
+eyes looking (PC),0.5208333333333334,0.4305555555555555,0.4547619047619047,72.0,50.0
+eyes looking (smartphone),0.0,0.0,0.0,0.0,0.0
 eyes looking (document),0.0,0.0,0.0,24.0,0.0
 "eyes looking (books, magazines)",0.0,0.0,0.0,0.0,0.0
-eyes looking (whiteboard),0.013333333333333332,0.013333333333333332,0.013333333333333332,15.0,1.0
+eyes looking (whiteboard),0.0,0.0,0.0,0.0,0.0
 eyes looking (display),0.0,0.0,0.0,0.0,0.0
-eyes looking (person),0.0,0.0,0.0,0.0,4.0
+eyes looking (person),0.0,0.0,0.0,0.0,3.0
 eyes closed,0.0,0.0,0.0,0.0,0.0
 eyes looking (other),0.0,0.0,0.0,0.0,0.0
-hand holding (pc),0.0,0.0,0.0,0.0,1.0
-hand holding (smartphone),0.0,0.0,0.0,31.0,0.0
-"hand holding (documents, books, magazines)",0.0,0.0,0.0,27.0,0.0
+hand holding (pc),0.0,0.0,0.0,0.0,0.0
+hand holding (smartphone),0.0,0.0,0.0,17.0,0.0
+"hand holding (documents, books, magazines)",0.0,0.0,0.0,12.0,0.0
 "hand holding (chopsticks, spoon, lunch box, bread, rice ball)",0.0,0.0,0.0,0.0,0.0
 hand holding (snacks),0.0,0.0,0.0,0.0,0.0
 "hand holding (cup, tumbler, plastic bottle, drink with straw)",0.0,0.0,0.0,0.0,0.0
 hand holding (tool),0.0,0.0,0.0,0.0,0.0
-hand holding (pen),0.04,0.06666666666666667,0.048888888888888885,9.0,15.0
+hand holding (pen),0.0,0.0,0.0,3.0,1.0
 hand holding (whiteboard eraser),0.0,0.0,0.0,0.0,0.0
 hand holding (other),0.0,0.0,0.0,0.0,0.0
-walking,0.0,0.0,0.0,15.0,1.0
+walking,0.0,0.0,0.0,0.0,1.0
 "gymnastics (stretching, radio calisthenics, yoga)",0.0,0.0,0.0,0.0,0.0
 meditation,0.0,0.0,0.0,0.0,0.0
-conversation,0.013333333333333332,0.006666666666666666,0.008888888888888887,2.0,43.0
-at work (other than talking),0.8975,0.9444444444444443,0.90890873015873,246.0,274.0
+conversation,0.0,0.0,0.0,0.0,22.0
+at work (other than talking),0.5916666666666666,0.8194444444444443,0.6778769841269839,72.0,100.0
 drink,0.0,0.0,0.0,0.0,0.0
 eat,0.0,0.0,0.0,0.0,0.0
-PC typing,0.008333333333333333,0.008333333333333333,0.008333333333333333,18.0,1.0
+PC typing,0.0,0.0,0.0,16.0,0.0
 product assembly,0.0,0.0,0.0,0.0,0.0
 unpacking and packing,0.0,0.0,0.0,0.0,0.0
 not clear,0.0,0.0,0.0,0.0,0.0
-others,0.008333333333333333,0.004166666666666667,0.005555555555555555,44.0,5.0
+others,0.041666666666666664,0.020833333333333332,0.027777777777777776,29.0,5.0
 phone,0.0,0.0,0.0,18.0,0.0
-micro avg,0.8129329643007009,0.6758473722196536,0.727981522170208,3096.0,
-macro avg,0.11839120370370368,0.11836033950617286,0.11520392416225748,3096.0,
-weighted avg,0.6957509926631755,0.6758473722196536,0.6690934068956658,3096.0,
-samples avg,0.7526916786916786,0.647979569042069,0.6925530582451181,3096.0,
+micro avg,0.6819509008680381,0.6115153613054726,0.6408871285990833,1074.0,
+macro avg,0.0974729938271605,0.11516203703703702,0.10150187389770725,1074.0,
+weighted avg,0.5300922452627849,0.6115153613054726,0.5516722568729466,1074.0,
+samples avg,0.6837086640211639,0.5276281241906241,0.5934891020691458,1074.0,
