@@ -1,6 +1,6 @@
-_base_ = '/home/moe/MMaction/config/__base__/default_runtime.py'
+_base_ = f'/home/moe/MMaction/config/__base__/default_runtime.py'
 
-cdir = "{{ fileDirname }}/.."
+chdir = "{{ fileDirname }}/.."
 
 url = ('https://download.openmmlab.com/mmaction/recognition/slowfast/'
        'slowfast_r50_4x16x1_256e_kinetics400_rgb/'
@@ -25,7 +25,7 @@ def load_label_map(file_path):
     num_classes = len(custom_classes)  + 1
     return num_classes, custom_classes
 
-label_map = f"{cdir}/download/KOKUYO_data/annotations/classes_en.txt" # label map file
+label_map = f"{chdir}/download/KOKUYO_data/annotations/classes_en.txt" # label map file
 num_classes, custom_classes = load_label_map(label_map)
 
 model = dict(
