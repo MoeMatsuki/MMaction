@@ -7,7 +7,7 @@ import cv2
 import moviepy.editor as mpy
 import numpy as np
 
-img_dir = "fastlabel1/convert_img"
+img_dir = "/home/moe/MMaction/data/2022年8月｜6F改修前/convert_img"
 label_map = {1: "teamBD(wb_mtg)", 2: "solo", 3:"teamTH", 4: "teamBD(F2F)"}
 output_fps = 2
 box_col = ["min_x","min_y","max_x","max_y"]

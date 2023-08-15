@@ -445,13 +445,13 @@ if __name__ == '__main__':
         from mmengine.config import Config
         config = Config.fromfile(args.config)
 
-    ## Case1:     
-    mm_csv = "/home/moe/MMaction/data/20230703_サンプル/mm_result/Act01_230703_sample_2023-07-03.zip/test_mmaction.csv"
-    mm2RF_csv = "/home/moe/MMaction/data/20230703_サンプル/mm_result/Act01_230703_sample_2023-07-03.zip/rf_result.csv"
-    converter = mm2Act(config, args.RFmodel)
-    converter(mm_csv, mm2RF_csv)
+    # ## Case1: １つずつ
+    # mm_csv = "/home/moe/MMaction/data/20230703_サンプル/mm_result/Act01_230703_sample_2023-07-03.zip/test_mmaction.csv"
+    # mm2RF_csv = "/home/moe/MMaction/data/20230703_サンプル/mm_result/Act01_230703_sample_2023-07-03.zip/rf_result.csv"
+    # converter = mm2Act(config, args.RFmodel)
+    # converter(mm_csv, mm2RF_csv)
 
-    ## Case2: 
+    ## Case2: まとめて
     out_csv = "rf_result.csv"
-    dir = "/home/moe/MMaction/data/20230703_サンプル/mm_result"
+    dir = "/home/moe/MMaction/data/2022年8月｜6F改修前/mm_result"
     process_dirs(config, args.RFmodel, out_csv, dir)

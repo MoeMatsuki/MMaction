@@ -71,6 +71,8 @@ def visualize(frames, annotations, label_map, plate=plate_blue, max_num=5):
                 #     continue
                 if len(ann) == 3:
                     score = ann[2]
+                else:
+                    score = None
                 box = (box * scale_ratio).astype(np.int64)
                 frame = rendering_bbox(frame, box)
                 frame = rendering_text(frame, box, label, label_map, top_n=max_num, scores=score)

@@ -3,11 +3,63 @@ import os
 from os import makedirs
 import cv2
 import json
+import math
 from os.path import splitext, dirname, basename, join
 
 class Convverter:
     def __init__(self):
         pass
+
+    def cut_videos(self, vid_path, out_dir, times = 2, startMillis = 0):
+        base_vid = vid_path.split("/")[-1]
+        for i in range(times):
+            out_path = os.path.join(out_dir, str(i).zfill(3) + "_" + base_vid)
+            print(out_path, startMillis + 30000 * i, 30000 * i)
+            self.cut_video(vid_path, out_path, startMillis + 30000 * i, stopMillis = 30000 * (i+1))
+
+    def cut_video(self, vid_path, out_path, startMillis = 0, stopMillis = 60000):
+
+        vid = cv2.VideoCapture(vid_path)
+        ## FPS : Frames per Second
+        fps = vid.get(cv2.CAP_PROP_FPS)
+        ## 総フレーム数
+        totalFrames = vid.get(cv2.CAP_PROP_FRAME_COUNT)
+        ## カット開始のフレームインデックス
+        startFrameIndex = math.ceil(fps * startMillis / 1000)
+        ## カット終了のフレームインデックス
+        stopFrameIndex = math.ceil(fps * stopMillis / 1000)
+        ## 範囲を越えたフレームインデックス修正
+        if(startFrameIndex < 0): 
+            startFrameIndex = 0
+        if(stopFrameIndex >= totalFrames):
+            stopFrameIndex = totalFrames-1
+        
+        ## 開始地点まで動画をシークする
+        vid.set(cv2.CAP_PROP_POS_FRAMES, startFrameIndex)
+        ## このあと使う変数
+        frameIndex = startFrameIndex
+        ## 開始～終了までを画像に分割
+        imgArr = []
+        while(frameIndex <= stopFrameIndex):
+            _,img = vid.read()
+            imgArr.append(img)
+            frameIndex += 1
+        ## 出力動画の形式（ascii4文字）
+        fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
+        ## 出力動画
+        video = None
+        ## 出力動画のファイル名
+        videoFileName = out_path
+        for img in imgArr:
+            if(video is None):
+                ## 動画の幅・高さ
+                h,w,_ = img.shape
+                ## FPS1で動画オブジェクト作成
+                video = cv2.VideoWriter(videoFileName, fourcc, fps, (w,h))
+            ## 動画末尾にフレーム書き出し
+            video.write(img)
+        ## 最期にリリース。忘れずに！
+        video.release()
 
     def vid2img(self, video_path: str, frame_dir: str, 
                 name="img", ext="jpg", max_frame_num=float("inf")):
@@ -182,11 +234,11 @@ def main():
     #     con.vid2img(vid, save_dir)
     #     print(f"{vid} is done")
 
-    ## Case2-1: 任意のディレクトリから画像を抽出して、名前を変換したものを別のディレクトリに保存
-    img_dir = "/home/moe/MMaction/fastlabel1/train_img/Webmtg_221226_02"
-    save_dir = "/home/moe/MMaction/fastlabel1/convert_img/Webmtg_221226_02"
-    os.makedirs(save_dir, exist_ok=True)
-    con.convert_img_filename(img_dir, save_dir)
+    # ## Case2-1: 任意のディレクトリから画像を抽出して、名前を変換したものを別のディレクトリに保存
+    # img_dir = "/home/moe/MMaction/fastlabel1/train_img/Webmtg_221226_02"
+    # save_dir = "/home/moe/MMaction/fastlabel1/convert_img/Webmtg_221226_02"
+    # os.makedirs(save_dir, exist_ok=True)
+    # con.convert_img_filename(img_dir, save_dir)
 
     # ## Case2-2: まとめて
     # input_dir = "/home/moe/MMaction/fastlabel1/train_img/"
@@ -202,15 +254,21 @@ def main():
     #     os.makedirs(out_put, exist_ok=True)
     #     con.convert_img_filename(img_dir_path, out_put)
 
-    ## Case3-1: labelのテキストファイルを抽出して一つのcsvにまとめる
-    dir_path = "/home/moe/MMaction/fastlabel1/annotation"
-    out_csv = "annotation_test.csv"
-    con.save_label_csv(dir_path, out_csv)
+    # ## Case3-1: labelのテキストファイルを抽出して一つのcsvにまとめる
+    # dir_path = "/home/moe/MMaction/fastlabel1/annotation"
+    # out_csv = "annotation_test.csv"
+    # con.save_label_csv(dir_path, out_csv)
 
     # ## Case3-2: jsonにも対応
     # dir_path = "/home/moe/MMaction/fastlabel1/jsons"
     # out_csv = "annotation_json_test.csv"
     # con.save_label_csv(dir_path, out_csv)
+
+    ## Case4: 長い動画を１分毎の動画に分割からimgに変換
+    vid_path = "/home/moe/MMaction/data/230623_実験前テスト/original/Safie_ノーマル画質_1.mp4"
+    out_path = "/home/moe/MMaction/data/test/tmp"
+    os.makedirs(out_path, exist_ok=True)
+    con.cut_videos(vid_path, out_path, startMillis=0, times=3)
 
 if __name__ == "__main__":
     main()

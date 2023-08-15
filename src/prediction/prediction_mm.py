@@ -39,7 +39,7 @@ except ImportError:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--conf_path', default="config/prediction_slowfast.py")
+    parser.add_argument('--conf_path', default="config/prediction_slowonly.py")
     args = parser.parse_args()
     return args
 

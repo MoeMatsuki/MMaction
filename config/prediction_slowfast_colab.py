@@ -2,7 +2,7 @@ _base_ = "slowfast_kinetics_pretrained_r50_4x16x1_20e_ava_rgb_custom_classes_n.p
 
 chdir = "{{ fileDirname }}/.."
 
-checkpoint = f"{chdir}/work_dirs/slowfast/20230614_fastlabel/epoch_392.pth" 
+checkpoint = f"{chdir}/download/model/latest_20230614_slowfast_epoch392.pth" 
 det_config = f"{chdir}/mmaction2/demo/demo_configs/faster-rcnn_r50_fpn_2x_coco_infer.py" #human detection config file path (from mmdet)
 det_checkpoint = f"{chdir}/download/model/faster_rcnn_r50_fpn_2x_coco_bbox_mAP-0.384_20200504_210434-a5d8aa15.pth" #"http://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_2x_coco/faster_rcnn_r50_fpn_2x_coco_bbox_mAP-0.384_20200504_210434-a5d8aa15.pth" #human detection checkpoint file/url'
 det_score_thr = 0.9 # the threshold of human detection score
