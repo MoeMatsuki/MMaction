@@ -1,3 +1,4 @@
+import setup as setup
 from rendering import visualize
 
 import os
@@ -7,9 +8,10 @@ import cv2
 import moviepy.editor as mpy
 import numpy as np
 
+dir = "/home/moe/MMaction/data/2022年8月｜6F改修前/mm_result"
 img_dir = "/home/moe/MMaction/data/2022年8月｜6F改修前/convert_img"
 label_map = {1: "teamBD(wb_mtg)", 2: "solo", 3:"teamTH", 4: "teamBD(F2F)"}
-output_fps = 2
+output_fps = 4
 box_col = ["min_x","min_y","max_x","max_y"]
 
 def combin_result(mm_df, rf_df):
@@ -17,16 +19,15 @@ def combin_result(mm_df, rf_df):
     high_activities = rf_df.loc[:, "high_activity"].values
     
     mm_bboxes = np.array([calc_center(box) for box in mm_df.loc[:, box_col].values])
-
     # mmactionの回答１つづつに最も近いrfの結果を探す
     close_result = search_pair(mm_bboxes, rf_bboxes)
     h_activities = []
     for c in range(len(mm_bboxes)):
         ix = close_result[c][0]
         lb_ix = high_activities[ix]
-        h_activities.append(label_map[lb_ix])
+        h_activities.append(lb_ix)
         
-    frame_imgs = mm_df.loc[:, "frame_num"].values
+    frame_imgs = mm_df.loc[:, "frame"].values
     mmboxes = mm_df.loc[:, box_col].values
 
     h_activity_dict = []
@@ -58,65 +59,48 @@ def search_pair(mm_list, rf_list):
         results.update({i_ix: (min_ix, min)})
     return results
 
-def get_image_name(x):
-    return "_".join(x.split("_")[:-2])
-
-def get_frame_name(x):
-    return "img_" + str(int(x.split("_")[-2])).zfill(5)
-
 def main():
-    mm_res_path = "/home/moe/MMaction/fastlabel1/annotations/20230620_train_rf.csv"
-    rf_res_path = "/home/moe/MMaction/fastlabel1/annotations/confirm_high_act.csv"
-    out_dir = "fastlabel1/rf_result_vid"
-    os.makedirs(out_dir, exist_ok=True)
+    for curDir, dirs, files in os.walk(dir):
+        if "rf_result.csv" in files:            
+            vid_name = curDir.split("/")[-1]
+            print(vid_name)
+            out_video = os.path.join(curDir, "rf_result.mp4")
 
-    rf_df_all = pd.read_csv(rf_res_path)
-    mm_df_all = pd.read_csv(mm_res_path)
+            # データ読み込み
+            rf_res_path = os.path.join(curDir, "rf_result.csv")
+            mm_res_path = os.path.join(curDir, "test_mmaction.csv")
+            rf_df = pd.read_csv(rf_res_path)
+            mm_df = pd.read_csv(mm_res_path)
 
-    images = rf_df_all["image"].unique()
-    mm_df_all["image"] = mm_df_all["frame"].map(get_image_name)
-    mm_df_all["frame_num"] = mm_df_all["frame"].map(get_frame_name)
-    for image in images:
-        print(image)
-        out_video = os.path.join(out_dir, f"{image}.mp4")
+            # mmactionの回答にrfの結果を結合
+            result_list = combin_result(mm_df, rf_df)
 
-        # データ読み込み
-        rf_df = rf_df_all[rf_df_all["image"] == image]
-        mm_df = mm_df_all[mm_df_all["image"] == image]
-
-        # mmactionの回答にrfの結果を結合
-        result_list = combin_result(mm_df, rf_df)
-        print(result_list)
-
-        results = []
-        pre_frame = None
-        person_info = []
-        new_frame = []
-        # 結果をフレームづつのlistに更新
-        for ix, frame_info in enumerate(result_list):
-            if pre_frame is None:
+            frames = []
+            results = []
+            pre_frame = None
+            person_info = []
+            new_frame = []
+            # 結果をフレームづつのlistに更新
+            for ix, frame_info in enumerate(result_list):
+                if pre_frame is None:
+                    pre_frame = frame_info["img"]
+                img_path = os.path.join(img_dir, (os.path.join(vid_name, frame_info["img"]+".jpg")))
+                frames.append(cv2.imread(img_path))
+                if pre_frame == frame_info["img"]:
+                    person_info.append([np.array(frame_info["bbox"]), [frame_info["high_activity"]]])
+                else:
+                    results.append(person_info)
+                    new_frame.append(frames[ix-1])
+                    person_info = [[np.array(frame_info["bbox"]), [frame_info["high_activity"]]]]
                 pre_frame = frame_info["img"]
-            img_path = os.path.join(img_dir, (os.path.join(image, frame_info["img"]+".jpg")))
-            frame = cv2.imread(img_path)
-            if pre_frame == frame_info["img"]:
-                person_info.append([np.array(frame_info["bbox"]), [frame_info["high_activity"]]])
-            else:
-                results.append(person_info)
-                img_path = os.path.join(img_dir, (os.path.join(image, pre_frame+".jpg")))
-                frame = cv2.imread(img_path)
-                new_frame.append(frame)
-                person_info = [[np.array(frame_info["bbox"]), [frame_info["high_activity"]]]]
-            pre_frame = frame_info["img"]
-        results.append(person_info)
-        img_path = os.path.join(img_dir, (os.path.join(image, pre_frame+".jpg")))
-        frame = cv2.imread(img_path)
-        new_frame.append(frame)
+            results.append(person_info)
+            new_frame.append(frames[ix])
 
-        # 動画に出力
-        vis_frames = visualize(new_frame, results)
-        vid = mpy.ImageSequenceClip([x[:, :, ::-1] for x in vis_frames],
-                                    fps=output_fps)
-        vid.write_videofile(out_video)
+            # 動画に出力
+            vis_frames = visualize(new_frame, results, label_map)
+            vid = mpy.ImageSequenceClip([x[:, :, ::-1] for x in vis_frames],
+                                        fps=output_fps)
+            vid.write_videofile(out_video)
 
 if __name__ == '__main__':
     main()
