@@ -9,6 +9,7 @@ from scipy.spatial.distance import cdist
 from scipy.optimize import linear_sum_assignment
 from statistics import mean
 from sklearn.ensemble import RandomForestClassifier
+from rendering_rf import RenderingRF
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a recognizer')
@@ -427,14 +428,17 @@ class mm2Act:
 
         return df
 
-def process_dirs(conf_rf, RFmodel, out_csv, dir):
+def process_dirs(conf_rf, RFmodel, result_dir, img_dir):
     predict_rf = mm2Act(conf_rf, RFmodel)
-    for curDir, _, files in os.walk(dir):
+    for curDir, _, files in os.walk(result_dir):
         if "test_mmaction.csv" in files:
             print(curDir)
             csv_path = os.path.join(curDir, "test_mmaction.csv")
-            out_csv_path = os.path.join(curDir, out_csv)
-            predict_rf(csv_path, out_csv_path)
+            mm2RF_csv = os.path.join(curDir, "rf_result.csv")
+            out_video = os.path.join(curDir, "rf_result.mp4")
+            vid_name = curDir.split("/")[-1]
+            predict_rf(csv_path, mm2RF_csv)
+            rendering.process(csv_path, mm2RF_csv, vid_name, img_dir, out_video)
 
 if __name__ == '__main__':
     args = parse_args()
@@ -444,14 +448,20 @@ if __name__ == '__main__':
     else:
         from mmengine.config import Config
         config = Config.fromfile(args.config)
+    rendering = RenderingRF()
 
-    # ## Case1: １つずつ
-    # mm_csv = "/home/moe/MMaction/data/20230703_サンプル/mm_result/Act01_230703_sample_2023-07-03.zip/test_mmaction.csv"
-    # mm2RF_csv = "/home/moe/MMaction/data/20230703_サンプル/mm_result/Act01_230703_sample_2023-07-03.zip/rf_result.csv"
+    # # ## Case1: １つずつ
+    # result_dir = "/home/moe/MMaction/data/20230703_サンプル/mm_result/Act01_230703_sample_2023-07-03.zip/"
+    # img_dir = "/home/moe/MMaction/data/20230703_サンプル/convert_img/Act01_230703_sample_2023-07-03.zip"
+    # mm_csv = os.path.join(result_dir, "test_mmaction.csv")
+    # mm2RF_csv = os.path.join(result_dir, "rf_result.csv")
+    # out_video = os.path.join(result_dir, "rf_result.mp4")
+    # vid_name = result_dir.split("/")[-1]
     # converter = mm2Act(config, args.RFmodel)
     # converter(mm_csv, mm2RF_csv)
+    # rendering.process(mm_csv, mm2RF_csv, vid_name, img_dir, out_video)
 
-    ## Case2: まとめて
-    out_csv = "rf_result.csv"
-    dir = "/home/moe/MMaction/data/2022年8月｜6F改修前/mm_result"
-    process_dirs(config, args.RFmodel, out_csv, dir)
+    # ## Case2: まとめて
+    result_dir = "/home/moe/MMaction/data/2022年8月｜6F改修前/mm_result"
+    img_dir = "/home/moe/MMaction/data/2022年8月｜6F改修前/convert_img"
+    process_dirs(config, args.RFmodel, result_dir, img_dir)

@@ -8,9 +8,6 @@ import cv2
 import moviepy.editor as mpy
 import numpy as np
 
-dir = "/home/moe/MMaction/data/2022年8月｜6F改修前/mm_result"
-img_dir = "/home/moe/MMaction/data/2022年8月｜6F改修前/convert_img"
-
 class RenderingRF:
     def __init__(self):
         self.output_fps = 4
@@ -62,48 +59,50 @@ class RenderingRF:
             results.update({i_ix: (min_ix, min)})
         return results
 
+    def process(self, mm_csv, mm2RF_csv, vid_name, img_dir, out_video):
+        rf_df = pd.read_csv(mm_csv)
+        mm_df = pd.read_csv(mm2RF_csv)
+
+        # mmactionの回答にrfの結果を結合
+        result_list = self.combin_result(rf_df, mm_df)
+
+        frames = []
+        results = []
+        pre_frame = None
+        person_info = []
+        new_frame = []
+        # 結果をフレームづつのlistに更新
+        for ix, frame_info in enumerate(result_list):
+            if pre_frame is None:
+                pre_frame = frame_info["img"]
+            img_path = os.path.join(img_dir, (os.path.join(vid_name, frame_info["img"]+".jpg")))
+            frames.append(cv2.imread(img_path))
+            if pre_frame == frame_info["img"]:
+                person_info.append([np.array(frame_info["bbox"]), [frame_info["high_activity"]]])
+            else:
+                results.append(person_info)
+                new_frame.append(frames[ix-1])
+                person_info = [[np.array(frame_info["bbox"]), [frame_info["high_activity"]]]]
+            pre_frame = frame_info["img"]
+        results.append(person_info)
+        new_frame.append(frames[ix])
+
+        # 動画に出力
+        vis_frames = visualize(new_frame, results, self.label_map)
+        vid = mpy.ImageSequenceClip([x[:, :, ::-1] for x in vis_frames],
+                                    fps=self.output_fps)
+        vid.write_videofile(out_video)
+
     def main(self, input_dir, img_dir):
         for curDir, dirs, files in os.walk(input_dir):
-            if "rf_result.csv" in files:            
-                vid_name = curDir.split("/")[-1]
-                print(vid_name)
+            if "rf_result.csv" in files:
+                # データ読み込み        
+                mm_csv = os.path.join(curDir, "test_mmaction.csv")
+                mm2RF_csv = os.path.join(curDir, "rf_result.csv")
                 out_video = os.path.join(curDir, "rf_result.mp4")
+                vid_name = curDir.split("/")[-1]
+                self.process(mm_csv, mm2RF_csv, vid_name, img_dir, out_video)
 
-                # データ読み込み
-                rf_res_path = os.path.join(curDir, "rf_result.csv")
-                mm_res_path = os.path.join(curDir, "test_mmaction.csv")
-                rf_df = pd.read_csv(rf_res_path)
-                mm_df = pd.read_csv(mm_res_path)
-
-                # mmactionの回答にrfの結果を結合
-                result_list = self.combin_result(mm_df, rf_df)
-
-                frames = []
-                results = []
-                pre_frame = None
-                person_info = []
-                new_frame = []
-                # 結果をフレームづつのlistに更新
-                for ix, frame_info in enumerate(result_list):
-                    if pre_frame is None:
-                        pre_frame = frame_info["img"]
-                    img_path = os.path.join(img_dir, (os.path.join(vid_name, frame_info["img"]+".jpg")))
-                    frames.append(cv2.imread(img_path))
-                    if pre_frame == frame_info["img"]:
-                        person_info.append([np.array(frame_info["bbox"]), [frame_info["high_activity"]]])
-                    else:
-                        results.append(person_info)
-                        new_frame.append(frames[ix-1])
-                        person_info = [[np.array(frame_info["bbox"]), [frame_info["high_activity"]]]]
-                    pre_frame = frame_info["img"]
-                results.append(person_info)
-                new_frame.append(frames[ix])
-
-                # 動画に出力
-                vis_frames = visualize(new_frame, results, self.label_map)
-                vid = mpy.ImageSequenceClip([x[:, :, ::-1] for x in vis_frames],
-                                            fps=self.output_fps)
-                vid.write_videofile(out_video)
 
 if __name__ == '__main__':
 

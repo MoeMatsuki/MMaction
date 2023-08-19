@@ -14,7 +14,6 @@ class Convverter:
         base_vid = vid_path.split("/")[-1]
         for i in range(times):
             out_path = os.path.join(out_dir, str(i).zfill(3) + "_" + base_vid)
-            print(out_path, startMillis + 30000 * i, 30000 * i)
             self.cut_video(vid_path, out_path, startMillis + 30000 * i, stopMillis = 30000 * (i+1))
 
     def cut_video(self, vid_path, out_path, startMillis = 0, stopMillis = 60000):
