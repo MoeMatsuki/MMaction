@@ -34,6 +34,7 @@ def abbrev(name):
         name = name[:st] + '...' + name[ed + 1:]
     return name
 
+
 def visualize(frames, annotations, label_map, plate=plate_blue, max_num=5):
     """Visualize frames with predicted annotations.
     Args:
@@ -65,6 +66,9 @@ def visualize(frames, annotations, label_map, plate=plate_blue, max_num=5):
             ind = i * nfpa + j
             frame = frames_[ind]
             for ann in anno:
+                print(ann)
+                if ann is None:
+                    continue
                 box = ann[0]
                 label = ann[1]
                 # if not len(label):

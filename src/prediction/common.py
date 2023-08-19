@@ -13,8 +13,11 @@ def load_label_map(file_path):
     # # lines = [x.strip().split(': ') for x in lines]
     # return {i+1: x for i, x in enumerate(lines)}
     lines = open(file_path).readlines()
-    lines = [x.strip().split(': ') for x in lines]
-    return {int(x[0]): x[1] for x in lines}
+    if ': ' in lines[0]:
+        lines = [x.strip().split(': ') for x in lines]
+        return {int(x[0]): x[1] for x in lines}
+    else:
+        return {ix: x.split("\n")[0] for ix, x in enumerate(lines)}
 
 def dense_timestamps(timestamps, n):
     """Make it nx frames."""
